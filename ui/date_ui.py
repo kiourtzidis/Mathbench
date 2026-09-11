@@ -7,7 +7,7 @@ class DateUI(ctk.CTkFrame):
 
         super().__init__(parent, fg_color='#2E2E2E')
         self.width = 460
-        self.height = 315
+        self.height = 310
         self.logic = logic
 
         self.grid_columnconfigure(0, weight=1)
@@ -20,7 +20,7 @@ class DateUI(ctk.CTkFrame):
 
     def _build_panel(self):
 
-        self.panel_frame = ctk.CTkFrame(self, fg_color='#1F1F1F', corner_radius=0)
+        self.panel_frame = ctk.CTkFrame(self, fg_color='#292929', corner_radius=0)
         self.panel_frame.grid(row=0, column=0, sticky='nsew')
 
         self.panel_frame.grid_columnconfigure(0, weight=1)
@@ -30,7 +30,7 @@ class DateUI(ctk.CTkFrame):
         self.panel_frame.grid_rowconfigure(3, weight=0)
         self.panel_frame.grid_rowconfigure(4, weight=0)
 
-        self.inputs_frame = ctk.CTkFrame(self.panel_frame, fg_color='#1F1F1F', corner_radius=0)
+        self.inputs_frame = ctk.CTkFrame(self.panel_frame, fg_color='#292929', corner_radius=0)
         self.inputs_frame.grid(row=0, column=0, sticky='nsew')
 
         self.inputs_frame.grid_columnconfigure(0, weight=1)
@@ -40,7 +40,7 @@ class DateUI(ctk.CTkFrame):
         self.to_entries = self._build_date_row(self.inputs_frame, 'To:', column=1)
 
         top_separator = ctk.CTkFrame(self.panel_frame, height=1, fg_color='#333333')
-        top_separator.grid(row=1, column=0, sticky='ew', pady=6)
+        top_separator.grid(row=1, column=0, sticky='ew', pady=3)
 
         self.result_label = ctk.CTkLabel(
             self.panel_frame, 
@@ -48,13 +48,13 @@ class DateUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 22, 'bold'), 
             text_color='#FFFFFF'
         )
-        self.result_label.grid(row=2, column=0, pady=4)
+        self.result_label.grid(row=2, column=0, pady=8)
 
         bottom_separator = ctk.CTkFrame(self.panel_frame, height=1, fg_color='#333333')
-        bottom_separator.grid(row=3, column=0, sticky='ew', pady=6)
+        bottom_separator.grid(row=3, column=0, sticky='ew', pady=3)
 
-        self.breakdown_frame = ctk.CTkFrame(self.panel_frame, fg_color='#1F1F1F', corner_radius=0)
-        self.breakdown_frame.grid(row=4, column=0, sticky='nsew')
+        self.breakdown_frame = ctk.CTkFrame(self.panel_frame, fg_color='#292929', corner_radius=0)
+        self.breakdown_frame.grid(row=4, column=0, sticky='nsew', pady=(0, 16))
 
         self.breakdown_frame.grid_columnconfigure(0, weight=1)
 
@@ -64,7 +64,7 @@ class DateUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 12), 
             text_color='#777777'
         )
-        breakdown_header.grid(row=0, column=0, pady=(4, 6))
+        breakdown_header.grid(row=0, column=0)
 
         self.days_label = ctk.CTkLabel(
             self.breakdown_frame, 
@@ -93,52 +93,68 @@ class DateUI(ctk.CTkFrame):
 
     def _build_date_row(self, parent, label_text, column):
 
-        frame = ctk.CTkFrame(parent, fg_color='#1F1F1F', corner_radius=0)
-        frame.grid(row=0, column=column, sticky='nsew', padx=8, pady=8)
+        date_frame = ctk.CTkFrame(parent, fg_color='#292929', corner_radius=0)
+        date_frame.grid(row=0, column=column, sticky='nsew', padx=8, pady=8)
 
         label = ctk.CTkLabel(
-            frame,
+            date_frame,
             text=label_text, 
             font=('Jetbrains Mono', 12), 
             text_color='#777777'
         )
-        label.pack(anchor='w', pady=(0, 4))
+        label.pack(anchor='w', padx=38, pady=(0, 4))
 
-        fields_frame = ctk.CTkFrame(frame, fg_color='#1F1F1F', corner_radius=0)
+        fields_frame = ctk.CTkFrame(date_frame, fg_color='#292929', corner_radius=0)
         fields_frame.pack()
 
         day_entry = ctk.CTkEntry(
             fields_frame, 
-            width=44, 
-            font=('Jetbrains Mono', 16),
-            fg_color='#242424',
+            width=30, 
+            font=('Jetbrains Mono', 14),
+            fg_color='#292929',
             border_width=1, 
             border_color='#4A4A4A',
-            placeholder_text='DD'
+            justify='center'
         )
         day_entry.grid(row=0, column=0, padx=2)
 
+        slash_label = ctk.CTkLabel(
+            fields_frame,
+            text='/',
+            font=('Jetbrains Mono', 16),
+            text_color='#CCCCCC'
+        )
+        slash_label.grid(row=0, column=1, padx=2)
+
         month_entry = ctk.CTkEntry(
             fields_frame,
-            width=44, 
-            font=('Jetbrains Mono', 16),
-            fg_color='#242424', 
+            width=30, 
+            font=('Jetbrains Mono', 14),
+            fg_color='#292929', 
             border_width=1, 
             border_color='#4A4A4A',
-            placeholder_text='MM'
+            justify='center'
         )
-        month_entry.grid(row=0, column=1, padx=2)
+        month_entry.grid(row=0, column=2, padx=2)
+
+        slash_label2 = ctk.CTkLabel(
+            fields_frame,
+            text='/',
+            font=('Jetbrains Mono', 16),
+            text_color='#CCCCCC'
+        )
+        slash_label2.grid(row=0, column=3, padx=2)
 
         year_entry = ctk.CTkEntry(
             fields_frame, 
-            width=64, 
-            font=('Jetbrains Mono', 16),
-            fg_color='#242424', 
+            width=48, 
+            font=('Jetbrains Mono', 14),
+            fg_color='#292929', 
             border_width=1, 
             border_color='#4A4A4A',
-            placeholder_text='YYYY'
+            justify='center'
         )
-        year_entry.grid(row=0, column=2, padx=2)
+        year_entry.grid(row=0, column=4, padx=2)
 
         today = date.today()
         day_entry.insert(0, str(today.day))
