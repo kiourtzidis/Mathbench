@@ -70,7 +70,7 @@ class GraphUI(ctk.CTkFrame):
             border_color='#3C3C3C',
             placeholder_text='Enter function…'
         )
-        self.function_entry.grid(row=0, column=0, columnspan=3, sticky='nsew', padx=2, pady=(2, 6))
+        self.function_entry.grid(row=0, column=0, columnspan=2, sticky='nsew', padx=2, pady=(2, 6))
 
         self.function_entry.configure(cursor='xterm')
         self.function_entry.bind('<Return>', self.plot_function)
@@ -194,11 +194,13 @@ class GraphUI(ctk.CTkFrame):
 
         self.logic.calculated = True
 
-        x = np.linspace(-10, 10, 400)
-        y = np.array([self.logic.evaluate_graph(xi) for xi in x], dtype=float)
+        try:
+            x = np.linspace(-10, 10, 400)
+            y = np.array([self.logic.evaluate_graph(xi) for xi in x], dtype=float)
+        except SyntaxError:
+            return
 
         self.ax.plot(x, y)
-
         self.canvas.draw()
 
 
@@ -312,7 +314,5 @@ class GraphUI(ctk.CTkFrame):
             self.logic.tokens = self.logic.lexer.tokenize(self.logic.raw_input)
             print(self.logic.tokens)
             self.logic._update_expressions_from_tokens()
-
-        except SyntaxError as e:
-            print(f'{e}')
+        except SyntaxError:
             pass
