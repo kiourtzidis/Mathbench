@@ -2,6 +2,7 @@ import customtkinter as ctk
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
 from core.exceptions import SyntaxError
 
 class GraphUI(ctk.CTkFrame):
@@ -15,6 +16,10 @@ class GraphUI(ctk.CTkFrame):
         self.logic = logic
         self.toggle_state = False
         self.secondary_buttons = {}
+
+        self.pan_start = None
+        self.pan_start_xlim = None
+        self.pan_start_ylim = None
 
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=0)
@@ -51,6 +56,8 @@ class GraphUI(ctk.CTkFrame):
         self.coords_label.place(relx=1.0, rely=0.0, anchor='ne', x=-5, y=5)
 
         self.canvas.mpl_connect('motion_notify_event', self.on_hover)
+        self.canvas.mpl_connect('button_press_event', self._on_pan_start)
+        self.canvas.mpl_connect('button_release_event', self._on_pan_end)
 
 
     def _build_controls(self):
@@ -237,6 +244,9 @@ class GraphUI(ctk.CTkFrame):
 
     def on_hover(self, event):
 
+         if event.inaxes and self.pan_start:
+             self._on_pan_move(event)
+
          if event.inaxes:
             x, y = event.xdata, event.ydata
             self.coords_label.configure(text=f'x={x:.2f}, y={y:.2f}')
@@ -266,10 +276,8 @@ class GraphUI(ctk.CTkFrame):
         self.fig.patch.set_facecolor('#2E2E2E')
         self.ax.grid(True, color='#444444')
 
-        self.ax.set_xticks([-10, -5, 5, 10])
-        self.ax.set_yticks([-10, -5, 5, 10])
-        self.ax.set_xticklabels(['-10', '-5', '5', '10'])
-        self.ax.set_yticklabels(['-10', '-5', '5', '10'])
+        self.ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+        self.ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
 
         self.ax.tick_params(
             colors='#AAAAAA',
@@ -305,6 +313,7 @@ class GraphUI(ctk.CTkFrame):
         self.ax.set_xlim(-10, 10)
         self.ax.set_ylim(-10, 10)
 
+
     def _sync_from_entry(self, event=None):
 
         text = self.function_entry.get()
@@ -316,3 +325,38 @@ class GraphUI(ctk.CTkFrame):
             self.logic._update_expressions_from_tokens()
         except SyntaxError:
             pass
+
+
+    def _on_pan_start(self, event):
+        if event.inaxes:
+            self.pan_start = (event.x, event.y)
+            self.pan_start_xlim = self.ax.get_xlim()
+            self.pan_start_ylim = self.ax.get_ylim()
+
+
+    def _on_pan_end(self, event):
+        self.pan_start = None
+        self.pan_start_xlim = None
+        self.pan_start_ylim = None
+
+
+    def _on_pan_move(self, event):
+
+        dx_pixels = event.x - self.pan_start[0]
+        dy_pixels = event.y - self.pan_start[1]
+
+        inverse = self.ax.transData.inverted()
+
+        origin_data = inverse.transform((0, 0))
+        offset_data = inverse.transform((dx_pixels, dy_pixels))
+
+        dx_data = offset_data[0] - origin_data[0]
+        dy_data = offset_data[1] - origin_data[1]
+
+        new_xlim = (self.pan_start_xlim[0] - dx_data, self.pan_start_xlim[1] - dx_data)
+        new_ylim = (self.pan_start_ylim[0] - dy_data, self.pan_start_ylim[1] - dy_data)
+
+        self.ax.set_xlim(new_xlim)
+        self.ax.set_ylim(new_ylim)
+
+        self.canvas.draw_idle()
