@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
-import core.exceptions
+from core.exceptions import SyntaxError
 
 class GraphUI(ctk.CTkFrame):
 
@@ -45,6 +45,53 @@ class GraphUI(ctk.CTkFrame):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill='both', expand=True)
+
+        self.recenter_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='⟳',
+            font=('Jetbrains Mono', 16),
+            width=18,
+            height=18,
+            text_color='#AAAAAA',
+            fg_color='#2E2E2E',
+            hover_color='#3C3C3C',
+            command=self.recenter
+        )
+        self.recenter_button.place(relx=0.0, rely=0.0, anchor='nw', x=4, y=5)
+
+        self.vertical_separator = ctk.CTkFrame(
+            self.canvas_frame,
+            width=1,
+            height=28,
+            fg_color='#444444'
+        )
+        self.vertical_separator.place(relx=0.0, rely=0.0, anchor='nw', x=30, y=5)
+
+        self.zoom_in_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='+',
+            font=('Jetbrains Mono', 16),
+            width=18,
+            height=18,
+            text_color='#AAAAAA',
+            fg_color='#2E2E2E',
+            hover_color='#3C3C3C',
+            #command=lambda: self.zoom(1.2)
+        )
+        self.zoom_in_button.place(relx=0.0, rely=0.0, anchor='nw', x=34, y=5)
+
+        self.zoom_out_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='-',
+            font=('Jetbrains Mono', 16),
+            width=18,
+            height=18,
+            text_color='#AAAAAA',
+            fg_color='#2E2E2E',
+            hover_color='#3C3C3C',
+            #command=lambda: self.zoom(0.8)
+        )
+        self.zoom_out_button.place(relx=0.0, rely=0.0, anchor='nw', x=58, y=5)
 
         self.coords_label = ctk.CTkLabel(
             self.canvas_frame,
@@ -254,6 +301,13 @@ class GraphUI(ctk.CTkFrame):
          else:
             self.coords_label.configure(text='')
             self.canvas.get_tk_widget().config(cursor='arrow')
+
+
+    def recenter(self):
+        self.ax.set_xlim(-10, 10)
+        self.ax.set_ylim(-10, 10)
+        self.canvas.draw_idle()
+        self._refresh_tick_labels()
 
 
     def _graph_click(self, labels):
