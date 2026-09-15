@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
-from core.exceptions import SyntaxError
+import core.exceptions
 
 class GraphUI(ctk.CTkFrame):
 
@@ -313,6 +313,8 @@ class GraphUI(ctk.CTkFrame):
         self.ax.set_xlim(-10, 10)
         self.ax.set_ylim(-10, 10)
 
+        self._refresh_tick_labels()
+
 
     def _sync_from_entry(self, event=None):
 
@@ -360,3 +362,13 @@ class GraphUI(ctk.CTkFrame):
         self.ax.set_ylim(new_ylim)
 
         self.canvas.draw_idle()
+        self._refresh_tick_labels()
+
+
+    def _refresh_tick_labels(self):
+
+        x_labels = [f'{t:.0f}' if t != 0 else '' for t in self.ax.get_xticks()]
+        y_labels = [f'{t:.0f}' if t != 0 else '' for t in self.ax.get_yticks()]
+        
+        self.ax.set_xticklabels(x_labels)
+        self.ax.set_yticklabels(y_labels)
