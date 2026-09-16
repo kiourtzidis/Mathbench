@@ -137,6 +137,11 @@ class CalculatorUI(ctk.CTkFrame):
             )
         item_label.grid(row=0, column=0, sticky='nsew', padx=(5, 0), pady=(1, 0))
 
+        item_label.configure(cursor='hand2')
+        item_label.bind('<Enter>', lambda e: item_label.configure(text_color='#FFFFFF'))
+        item_label.bind('<Leave>', lambda e: item_label.configure(text_color='#BBBBBB'))
+        item_label.bind('<Button-1>', lambda e, r=raw_input: self.history_click(r))
+
         formatted_line = self.format_history_item(line)
         item_label.configure(text=formatted_line)
 
@@ -146,10 +151,15 @@ class CalculatorUI(ctk.CTkFrame):
             width=24,
             height=24,
             fg_color='#444444',
+            hover_color='#555555',
             font=('Jetbrains Mono', 14),
             command=lambda l=line: self.history_copy(l)
         )
         copy_button.grid(row=0, column=1, sticky='e', padx=(5, 0))
+
+        copy_button.configure(cursor='hand2')
+        copy_button.bind('<Enter>', lambda e: copy_button.configure(text_color='#FFFFFF'))
+        copy_button.bind('<Leave>', lambda e: copy_button.configure(text_color='#BBBBBB'))
 
         delete_button = ctk.CTkButton(
             item_frame,
@@ -157,22 +167,13 @@ class CalculatorUI(ctk.CTkFrame):
             width=24,
             height=24,
             fg_color='#444444',
+            hover_color='#555555',
             font=('Jetbrains Mono', 14),
             command=lambda f=outer: self.history_delete(f)
         )
         delete_button.grid(row=0, column=2, sticky='e', padx=(5, 0))
-
-        item_label.configure(cursor='hand2')
-        copy_button.configure(cursor='hand2')
+      
         delete_button.configure(cursor='hand2')
-
-        item_label.bind('<Enter>', lambda e: item_label.configure(text_color='#FFFFFF'))
-        item_label.bind('<Leave>', lambda e: item_label.configure(text_color='#BBBBBB'))
-        item_label.bind('<Button-1>', lambda e, r=raw_input: self.history_click(r))
-
-        copy_button.bind('<Enter>', lambda e: copy_button.configure(text_color='#FFFFFF'))
-        copy_button.bind('<Leave>', lambda e: copy_button.configure(text_color='#BBBBBB'))
-
         delete_button.bind('<Enter>', lambda e: delete_button.configure(text_color='#FFFFFF'))
         delete_button.bind('<Leave>', lambda e: delete_button.configure(text_color='#BBBBBB'))
 

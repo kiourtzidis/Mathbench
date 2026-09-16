@@ -52,12 +52,17 @@ class GraphUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 16),
             width=18,
             height=18,
-            text_color='#AAAAAA',
+            text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#3C3C3C',
             command=self.recenter
         )
         self.recenter_button.place(relx=0.0, rely=0.0, anchor='nw', x=4, y=5)
+
+        self.recenter_button.configure(cursor='hand2')
+        self.recenter_button.bind('<Enter>', lambda e: self.recenter_button.configure(text_color='#FFFFFF'))
+        self.recenter_button.bind('<Leave>', lambda e: self.recenter_button.configure(text_color='#BBBBBB'))
+        
 
         self.vertical_separator = ctk.CTkFrame(
             self.canvas_frame,
@@ -73,12 +78,16 @@ class GraphUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 16),
             width=18,
             height=18,
-            text_color='#AAAAAA',
+            text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#3C3C3C',
             #command=lambda: self.zoom(1.2)
         )
         self.zoom_in_button.place(relx=0.0, rely=0.0, anchor='nw', x=34, y=5)
+
+        self.zoom_in_button.configure(cursor='hand2')
+        self.zoom_in_button.bind('<Enter>', lambda e: self.zoom_in_button.configure(text_color='#FFFFFF'))
+        self.zoom_in_button.bind('<Leave>', lambda e: self.zoom_in_button.configure(text_color='#BBBBBB'))
 
         self.zoom_out_button = ctk.CTkButton(
             self.canvas_frame,
@@ -86,19 +95,23 @@ class GraphUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 16),
             width=18,
             height=18,
-            text_color='#AAAAAA',
+            text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#3C3C3C',
             #command=lambda: self.zoom(0.8)
         )
         self.zoom_out_button.place(relx=0.0, rely=0.0, anchor='nw', x=58, y=5)
 
+        self.zoom_out_button.configure(cursor='hand2')
+        self.zoom_out_button.bind('<Enter>', lambda e: self.zoom_out_button.configure(text_color='#FFFFFF'))
+        self.zoom_out_button.bind('<Leave>', lambda e: self.zoom_out_button.configure(text_color='#BBBBBB'))
+
         self.coords_label = ctk.CTkLabel(
             self.canvas_frame,
             text='',
             font=('Jetbrains Mono', 10),
             fg_color='#2E2E2E',
-            text_color='#AAAAAA'
+            text_color='#BBBBBB'
         )
         self.coords_label.place(relx=1.0, rely=0.0, anchor='ne', x=-5, y=5)
 
