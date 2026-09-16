@@ -151,7 +151,7 @@ class CalculatorUI(ctk.CTkFrame):
             width=24,
             height=24,
             fg_color='#444444',
-            hover_color='#555555',
+            hover_color='#444444',
             font=('Jetbrains Mono', 14),
             command=lambda l=line: self.history_copy(l)
         )
@@ -167,7 +167,7 @@ class CalculatorUI(ctk.CTkFrame):
             width=24,
             height=24,
             fg_color='#444444',
-            hover_color='#555555',
+            hover_color='#444444',
             font=('Jetbrains Mono', 14),
             command=lambda f=outer: self.history_delete(f)
         )

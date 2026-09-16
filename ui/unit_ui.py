@@ -243,8 +243,8 @@ class UnitUI(ctk.CTkFrame):
         self.shortcuts_grid = ctk.CTkFrame(self.shortcuts_frame, fg_color='#292929', corner_radius=0)
         self.shortcuts_grid.grid(row=1, column=0, sticky='nsew', padx=8, pady=(0, 8))
 
-        for col in range(3):
-            self.shortcuts_grid.grid_columnconfigure(col, weight=1)
+        for column in range(3):
+            self.shortcuts_grid.grid_columnconfigure(column, weight=1)
         for row in range(2):
             self.shortcuts_grid.grid_rowconfigure(row, weight=1)
 

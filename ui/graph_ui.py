@@ -54,7 +54,7 @@ class GraphUI(ctk.CTkFrame):
             height=18,
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
-            hover_color='#3C3C3C',
+            hover_color='#2E2E2E',
             command=self.recenter
         )
         self.recenter_button.place(relx=0.0, rely=0.0, anchor='nw', x=4, y=5)
@@ -80,7 +80,7 @@ class GraphUI(ctk.CTkFrame):
             height=18,
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
-            hover_color='#3C3C3C',
+            hover_color='#2E2E2E',
             #command=lambda: self.zoom(1.2)
         )
         self.zoom_in_button.place(relx=0.0, rely=0.0, anchor='nw', x=34, y=5)
@@ -97,7 +97,7 @@ class GraphUI(ctk.CTkFrame):
             height=18,
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
-            hover_color='#3C3C3C',
+            hover_color='#2E2E2E',
             #command=lambda: self.zoom(0.8)
         )
         self.zoom_out_button.place(relx=0.0, rely=0.0, anchor='nw', x=58, y=5)
