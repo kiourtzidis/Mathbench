@@ -8,9 +8,9 @@ class GraphLogic(CalculatorLogic):
         super().__init__()
         self.angle_mode = 'RAD'
 
-    def evaluate_graph(self, x):
+    def evaluate_graph(self, x, tokens=None):
         try:
-            parser = Parser(self._expand_tokens(self.tokens))
+            parser = Parser(self._expand_tokens(tokens if tokens is not None else self.tokens))
 
             ast = parser.parse()
             scope = {

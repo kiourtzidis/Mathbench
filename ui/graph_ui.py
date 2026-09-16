@@ -16,6 +16,7 @@ class GraphUI(ctk.CTkFrame):
         self.logic = logic
         self.toggle_state = False
         self.secondary_buttons = {}
+        self.plotted_functions = []
 
         self.pan_start = None
         self.pan_start_xlim = None
@@ -264,17 +265,21 @@ class GraphUI(ctk.CTkFrame):
         self.logic.calculated = True
 
         try:
-            x = np.linspace(-10, 10, 400)
+            xlim = self.ax.get_xlim()
+            x = np.linspace(xlim[0], xlim[1], 400)
             y = np.array([self.logic.evaluate_graph(xi) for xi in x], dtype=float)
         except SyntaxError:
             return
 
-        self.ax.plot(x, y)
+        line, = self.ax.plot(x, y)
+        self.plotted_functions.append({'line': line, 'tokens': list(self.logic.tokens)})
+
         self.canvas.draw()
 
 
     def clear_functions(self):
         self.ax.clear()
+        self.plotted_functions.clear()
         self._style_axes()
         self.canvas.draw()
 
@@ -319,9 +324,13 @@ class GraphUI(ctk.CTkFrame):
 
 
     def recenter(self):
+
         self.ax.set_xlim(-10, 10)
         self.ax.set_ylim(-10, 10)
+
+        self._redraw_curves()
         self.canvas.draw_idle()
+
         self._refresh_tick_labels()
 
 
@@ -398,6 +407,22 @@ class GraphUI(ctk.CTkFrame):
             pass
 
 
+    def _redraw_curves(self):
+
+            if not self.plotted_functions:
+                return
+
+            try:
+                xlim = self.ax.get_xlim()
+                x = np.linspace(xlim[0], xlim[1], 400)
+
+                for entry in self.plotted_functions:
+                    y = np.array([self.logic.evaluate_graph(xi, tokens=entry['tokens']) for xi in x], dtype=float)
+                    entry['line'].set_data(x, y)
+            except SyntaxError:
+                pass
+
+
     def _on_pan_start(self, event):
         if event.inaxes:
             self.pan_start = (event.x, event.y)
@@ -429,6 +454,8 @@ class GraphUI(ctk.CTkFrame):
 
         self.ax.set_xlim(new_xlim)
         self.ax.set_ylim(new_ylim)
+
+        self._redraw_curves()
 
         self.canvas.draw_idle()
         self._refresh_tick_labels()
