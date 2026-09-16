@@ -119,6 +119,8 @@ class GraphUI(ctk.CTkFrame):
         self.canvas.mpl_connect('button_press_event', self._on_pan_start)
         self.canvas.mpl_connect('button_release_event', self._on_pan_end)
 
+        self.winfo_toplevel().bind('<Control-0>', lambda e: self.recenter())
+
 
     def _build_controls(self):
 
