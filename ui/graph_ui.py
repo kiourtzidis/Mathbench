@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from matplotlib.pyplot import xlim
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -82,7 +83,7 @@ class GraphUI(ctk.CTkFrame):
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
-            #command=lambda: self.zoom(1.2)
+            command=lambda: self.zoom(1.2)
         )
         self.zoom_in_button.place(relx=0.0, rely=0.0, anchor='nw', x=34, y=5)
 
@@ -99,7 +100,7 @@ class GraphUI(ctk.CTkFrame):
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
-            #command=lambda: self.zoom(0.8)
+            command=lambda: self.zoom(0.8)
         )
         self.zoom_out_button.place(relx=0.0, rely=0.0, anchor='nw', x=58, y=5)
 
@@ -117,8 +118,9 @@ class GraphUI(ctk.CTkFrame):
         self.coords_label.place(relx=1.0, rely=0.0, anchor='ne', x=-5, y=5)
 
         self.canvas.mpl_connect('motion_notify_event', self.on_hover)
+        self.canvas.mpl_connect('scroll_event', self.on_scroll)
         self.canvas.mpl_connect('button_press_event', self._on_pan_start)
-        self.canvas.mpl_connect('button_release_event', self._on_pan_end)
+        self.canvas.mpl_connect('button_release_event', self._on_pan_end)        
 
         self.winfo_toplevel().bind('<Control-0>', lambda e: self.recenter())
 
@@ -321,6 +323,40 @@ class GraphUI(ctk.CTkFrame):
          else:
             self.coords_label.configure(text='')
             self.canvas.get_tk_widget().config(cursor='arrow')
+
+
+    def on_scroll(self, event):
+
+        if not event.inaxes:
+            return
+
+        factor = 0.9 if event.button == 'up' else 1.1
+        self.zoom(factor, center_x=event.xdata, center_y=event.ydata)
+
+
+    def zoom(self, factor, center_x=None, center_y=None):
+
+        if center_x is None or center_y is None:
+            center_x = (self.ax.get_xlim()[0] + self.ax.get_xlim()[1]) / 2
+            center_y = (self.ax.get_ylim()[0] + self.ax.get_ylim()[1]) / 2
+
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+
+        left_distance = center_x - xlim[0]
+        right_distance = xlim[1] - center_x
+        new_xlim = (center_x - left_distance * factor, center_x + right_distance * factor)
+
+        bottom_distance = center_y - ylim[0]
+        top_distance = ylim[1] - center_y
+        new_ylim = (center_y - bottom_distance * factor, center_y + top_distance * factor)
+
+        self.ax.set_xlim(new_xlim)
+        self.ax.set_ylim(new_ylim)
+
+        self._redraw_curves()
+        self.canvas.draw_idle()
+        self._refresh_tick_labels()
 
 
     def recenter(self):
