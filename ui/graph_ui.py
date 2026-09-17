@@ -343,6 +343,10 @@ class GraphUI(ctk.CTkFrame):
         xlim = self.ax.get_xlim()
         ylim = self.ax.get_ylim()
 
+        new_width = (xlim[1] - xlim[0]) * factor
+        if not (0.001 <= new_width <= 1_000_000):
+            return
+
         left_distance = center_x - xlim[0]
         right_distance = xlim[1] - center_x
         new_xlim = (center_x - left_distance * factor, center_x + right_distance * factor)
