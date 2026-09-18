@@ -503,8 +503,20 @@ class GraphUI(ctk.CTkFrame):
 
     def _refresh_tick_labels(self):
 
-        x_labels = [f'{t:.0f}' if t != 0 else '' for t in self.ax.get_xticks()]
-        y_labels = [f'{t:.0f}' if t != 0 else '' for t in self.ax.get_yticks()]
+        xlim = self.ax.get_xlim()
+        x_range = xlim[1] - xlim[0]
+
+        if x_range < 0.1:
+            decimals = 3
+        elif x_range < 2:
+            decimals = 2
+        elif x_range < 5:
+            decimals = 1
+        else:
+            decimals = 0
+
+        x_labels = [f'{t:.{decimals}f}' if t != 0 else '' for t in self.ax.get_xticks()]
+        y_labels = [f'{t:.{decimals}f}' if t != 0 else '' for t in self.ax.get_yticks()]
         
         self.ax.set_xticklabels(x_labels)
         self.ax.set_yticklabels(y_labels)
