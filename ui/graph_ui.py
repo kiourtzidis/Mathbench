@@ -476,6 +476,8 @@ class GraphUI(ctk.CTkFrame):
         closest_distance = None
         closest_index = None
 
+        max_distance = (self.ax.get_xlim()[1] - self.ax.get_xlim()[0]) * 0.02
+
         for plotted_function in self.plotted_functions:
 
             x_data, y_data = plotted_function['line'].get_data()
@@ -489,7 +491,7 @@ class GraphUI(ctk.CTkFrame):
                 closest_distance = distance
                 closest_index = index
 
-        if closest_function is None:
+        if closest_function is None or closest_distance > max_distance:
             return None
 
         closest_x, closest_y = closest_function['line'].get_data()
