@@ -50,7 +50,7 @@ class GraphUI(ctk.CTkFrame):
 
         self.recenter_button = ctk.CTkButton(
             self.canvas_frame,
-            text='⟳',
+            text='⊙',
             font=('Jetbrains Mono', 16),
             width=18,
             height=18,
