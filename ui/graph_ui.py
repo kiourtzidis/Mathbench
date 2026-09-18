@@ -83,7 +83,7 @@ class GraphUI(ctk.CTkFrame):
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
-            command=lambda: self.zoom(1.2)
+            command=lambda: self.zoom(0.9)
         )
         self.zoom_in_button.place(relx=0.0, rely=0.0, anchor='nw', x=34, y=5)
 
@@ -100,7 +100,7 @@ class GraphUI(ctk.CTkFrame):
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
-            command=lambda: self.zoom(0.8)
+            command=lambda: self.zoom(1.1)
         )
         self.zoom_out_button.place(relx=0.0, rely=0.0, anchor='nw', x=58, y=5)
 
