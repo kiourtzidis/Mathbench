@@ -1,5 +1,4 @@
 import customtkinter as ctk
-from matplotlib.pyplot import xlim
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -18,6 +17,9 @@ class GraphUI(ctk.CTkFrame):
         self.toggle_state = False
         self.secondary_buttons = {}
         self.plotted_functions = []
+
+        self.selected_marker = None
+        self.selected_label = None
 
         self.pan_start = None
         self.pan_start_xlim = None
@@ -280,8 +282,13 @@ class GraphUI(ctk.CTkFrame):
 
 
     def clear_functions(self):
+
         self.ax.clear()
         self.plotted_functions.clear()
+
+        self.selected_marker = None
+        self.selected_label = None
+
         self._style_axes()
         self.canvas.draw()
 
@@ -456,11 +463,77 @@ class GraphUI(ctk.CTkFrame):
                 xlim = self.ax.get_xlim()
                 x = np.linspace(xlim[0], xlim[1], 400)
 
-                for entry in self.plotted_functions:
-                    y = np.array([self.logic.evaluate_graph(xi, tokens=entry['tokens']) for xi in x], dtype=float)
-                    entry['line'].set_data(x, y)
+                for plotted_function in self.plotted_functions:
+                    y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
+                    plotted_function['line'].set_data(x, y)
             except SyntaxError:
                 pass
+
+
+    def _find_nearest_point(self, click_x, click_y):
+
+        closest_function = None
+        closest_distance = None
+        closest_index = None
+
+        for plotted_function in self.plotted_functions:
+
+            x_data, y_data = plotted_function['line'].get_data()
+
+            distances = np.hypot(x_data - click_x, y_data - click_y)
+            index = np.argmin(distances)
+            distance = distances[index]
+
+            if closest_distance is None or distance < closest_distance:
+                closest_function = plotted_function
+                closest_distance = distance
+                closest_index = index
+
+        if closest_function is None:
+            return None
+
+        closest_x, closest_y = closest_function['line'].get_data()
+
+        return closest_function, closest_x[closest_index], closest_y[closest_index]
+
+
+    def _show_selected_point(self, nearest):
+
+        if self.selected_marker is not None:
+            self.selected_marker.remove()
+            self.selected_marker = None
+
+        if self.selected_label is not None:
+            self.selected_label.remove()
+            self.selected_label = None
+
+        if nearest is None:
+            self.canvas.draw_idle()
+            return
+
+        plotted_function, x, y = nearest
+
+        self.selected_marker, = self.ax.plot(
+            [x], [y],
+            marker='o',
+            markersize=6,
+            color='#FFFFFF',
+            markeredgecolor='#000000',
+            markeredgewidth=1,
+            zorder=5
+        )
+
+        self.selected_label = self.ax.annotate(
+            f'({x:.3g}, {y:.3g})',
+            xy=(x, y),
+            xytext=(8, 8),
+            textcoords='offset points',
+            color='#FFFFFF',
+            fontsize=9,
+            bbox=dict(boxstyle='round,pad=0.3', fc='#2E2E2E', ec='#555555', lw=1)
+        )
+
+        self.canvas.draw_idle()
 
 
     def _on_pan_start(self, event):
@@ -471,6 +544,17 @@ class GraphUI(ctk.CTkFrame):
 
 
     def _on_pan_end(self, event):
+
+        nearest = None
+
+        if self.pan_start is not None:
+            distance_moved = np.hypot(event.x - self.pan_start[0], event.y - self.pan_start[1])
+
+            if event.inaxes and distance_moved < 5:
+                nearest = self._find_nearest_point(event.xdata, event.ydata)
+
+        self._show_selected_point(nearest)
+        
         self.pan_start = None
         self.pan_start_xlim = None
         self.pan_start_ylim = None
