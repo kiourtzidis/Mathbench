@@ -18,8 +18,10 @@ class GraphUI(ctk.CTkFrame):
         self.secondary_buttons = {}
         self.plotted_functions = []
 
-        self.selected_marker = None
-        self.selected_label = None
+        self.point_marker = None
+        self.point_label = None
+
+        self.root_markers = None
 
         self.pan_start = None
         self.pan_start_xlim = None
@@ -264,6 +266,52 @@ class GraphUI(ctk.CTkFrame):
             self.buttons_frame.grid_columnconfigure(c, weight=1)
 
 
+    def _style_axes(self):
+    
+            self.ax.set_facecolor('#2E2E2E')
+            self.fig.patch.set_facecolor('#2E2E2E')
+            self.ax.grid(True, color='#444444')
+    
+            self.ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+            self.ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    
+            self.ax.tick_params(
+                colors='#AAAAAA',
+                labelsize=8
+            )
+    
+            self.ax.spines['top'].set_visible(False)
+            self.ax.spines['right'].set_visible(False)
+    
+            self.ax.spines['bottom'].set_position('zero')
+            self.ax.spines['left'].set_position('zero')
+    
+            self.ax.spines['bottom'].set_color('white')
+            self.ax.spines['left'].set_color('white')
+            self.ax.spines['bottom'].set_linewidth(1)
+            self.ax.spines['left'].set_linewidth(1)
+    
+            self.ax.title.set_color('white')
+            self.ax.yaxis.label.set_color('white')
+            self.ax.xaxis.label.set_color('white')
+    
+            self.ax.annotate(
+                '0',
+                xy=(0, 0),
+                xytext=(-3, -3),
+                textcoords='offset points',
+                color='#AAAAAA',
+                fontsize=8,
+                ha='right',
+                va='top'
+            )
+    
+            self.ax.set_xlim(-10, 10)
+            self.ax.set_ylim(-10, 10)
+    
+            self._refresh_tick_labels()
+    
+
     def plot_function(self, event=None):
 
         self.logic.calculated = True
@@ -278,6 +326,9 @@ class GraphUI(ctk.CTkFrame):
         line, = self.ax.plot(x, y)
         self.plotted_functions.append({'line': line, 'tokens': list(self.logic.tokens)})
 
+        self.logic.clear()
+        self.update_typing_display()
+        self._redraw_curves()
         self.canvas.draw()
 
 
@@ -286,8 +337,9 @@ class GraphUI(ctk.CTkFrame):
         self.ax.clear()
         self.plotted_functions.clear()
 
-        self.selected_marker = None
-        self.selected_label = None
+        self.point_marker = None
+        self.point_label = None
+        self.root_markers = None
 
         self._style_axes()
         self.canvas.draw()
@@ -395,52 +447,6 @@ class GraphUI(ctk.CTkFrame):
         self.handle_symbol(symbol)
 
 
-    def _style_axes(self):
-
-        self.ax.set_facecolor('#2E2E2E')
-        self.fig.patch.set_facecolor('#2E2E2E')
-        self.ax.grid(True, color='#444444')
-
-        self.ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
-        self.ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-
-        self.ax.tick_params(
-            colors='#AAAAAA',
-            labelsize=8
-        )
-
-        self.ax.spines['top'].set_visible(False)
-        self.ax.spines['right'].set_visible(False)
-
-        self.ax.spines['bottom'].set_position('zero')
-        self.ax.spines['left'].set_position('zero')
-
-        self.ax.spines['bottom'].set_color('white')
-        self.ax.spines['left'].set_color('white')
-        self.ax.spines['bottom'].set_linewidth(1)
-        self.ax.spines['left'].set_linewidth(1)
-
-        self.ax.title.set_color('white')
-        self.ax.yaxis.label.set_color('white')
-        self.ax.xaxis.label.set_color('white')
-
-        self.ax.annotate(
-            '0',
-            xy=(0, 0),
-            xytext=(-3, -3),
-            textcoords='offset points',
-            color='#AAAAAA',
-            fontsize=8,
-            ha='right',
-            va='top'
-        )
-
-        self.ax.set_xlim(-10, 10)
-        self.ax.set_ylim(-10, 10)
-
-        self._refresh_tick_labels()
-
-
     def _sync_from_entry(self, event=None):
 
         text = self.function_entry.get()
@@ -463,9 +469,14 @@ class GraphUI(ctk.CTkFrame):
                 xlim = self.ax.get_xlim()
                 x = np.linspace(xlim[0], xlim[1], 400)
 
+                roots = []
+
                 for plotted_function in self.plotted_functions:
                     y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
                     plotted_function['line'].set_data(x, y)
+                    roots.extend(self._find_roots(x, y))
+
+                    self._show_roots(roots)
             except SyntaxError:
                 pass
 
@@ -499,15 +510,61 @@ class GraphUI(ctk.CTkFrame):
         return closest_function, closest_x[closest_index], closest_y[closest_index]
 
 
+    def _show_roots(self, roots):
+
+        if self.root_markers is not None:
+            for marker, label in self.root_markers:
+                marker.remove()
+                label.remove()
+            self.root_markers = None
+
+        if not roots:
+            self.canvas.draw_idle()
+            return
+
+        self.root_markers = []
+
+        for root in roots:
+            root_marker, = self.ax.plot(
+                [root], [0],
+                marker='o',
+                markersize=6,
+                color='#FFFFFF',
+                markeredgecolor='#000000',
+                markeredgewidth=1,
+                zorder=5
+            )
+
+            root_label = self.ax.annotate(
+                f'({root:.3g}, 0)',
+                xy=(root, 0),
+                xytext=(8, 8),
+                textcoords='offset points',
+                color='#FFFFFF',
+                fontsize=9,
+                fontfamily='monospace',
+                bbox=dict(
+                    boxstyle='round,pad=0.3',
+                    fc='#2E2E2E',
+                    ec='#555555',
+                    lw=0.5
+                )
+            )
+
+            self.root_markers.append((root_marker, root_label))
+
+        self.canvas.draw_idle()
+
+
     def _show_selected_point(self, nearest):
 
-        if self.selected_marker is not None:
-            self.selected_marker.remove()
-            self.selected_marker = None
+        if self.point_marker is not None:
+            self.point_marker.remove()
+            self.point_marker = None
 
-        if self.selected_label is not None:
-            self.selected_label.remove()
-            self.selected_label = None
+        if self.point_label is not None:
+            self.point_label.remove()
+            self.point_label = None
 
         if nearest is None:
             self.canvas.draw_idle()
@@ -515,7 +572,7 @@ class GraphUI(ctk.CTkFrame):
 
         plotted_function, x, y = nearest
 
-        self.selected_marker, = self.ax.plot(
+        self.point_marker, = self.ax.plot(
             [x], [y],
             marker='o',
             markersize=6,
@@ -525,14 +582,20 @@ class GraphUI(ctk.CTkFrame):
             zorder=5
         )
 
-        self.selected_label = self.ax.annotate(
+        self.point_label = self.ax.annotate(
             f'({x:.3g}, {y:.3g})',
             xy=(x, y),
             xytext=(8, 8),
             textcoords='offset points',
             color='#FFFFFF',
             fontsize=9,
-            bbox=dict(boxstyle='round,pad=0.3', fc='#2E2E2E', ec='#555555', lw=1)
+            fontfamily='monospace',
+            bbox=dict(
+                boxstyle='round,pad=0.3',
+                fc='#2E2E2E',
+                ec='#555555',
+                lw=0.5
+            )
         )
 
         self.canvas.draw_idle()
@@ -556,7 +619,7 @@ class GraphUI(ctk.CTkFrame):
                 nearest = self._find_nearest_point(event.xdata, event.ydata)
 
         self._show_selected_point(nearest)
-        
+
         self.pan_start = None
         self.pan_start_xlim = None
         self.pan_start_ylim = None
