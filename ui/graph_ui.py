@@ -315,7 +315,7 @@ class GraphUI(ctk.CTkFrame):
     def plot_function(self, event=None):
 
         self.logic.calculated = True
-
+ 
         try:
             xlim = self.ax.get_xlim()
             x = np.linspace(xlim[0], xlim[1], 400)
@@ -474,11 +474,96 @@ class GraphUI(ctk.CTkFrame):
                 for plotted_function in self.plotted_functions:
                     y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
                     plotted_function['line'].set_data(x, y)
-                    roots.extend(self._find_roots(x, y))
+                    roots.extend(self._find_roots(x, y, plotted_function['tokens']))
 
-                    self._show_roots(roots)
+                self._show_roots(roots)
             except SyntaxError:
                 pass
+
+
+    def _find_roots(self, x, y, tokens):
+
+        roots = []
+        finite_y = y[~np.isnan(y)]
+        y_range = finite_y.max() - finite_y.min() if finite_y.size else 1.0
+        threshold = max(y_range * 0.05, 1e-6)
+
+        for i in range(len(y) - 1):
+            y1, y2 = y[i], y[i+1]
+            x1, x2 = x[i], x[i+1]
+
+            if np.isnan(y1) or np.isnan(y2):
+                continue
+
+            if not (y1 == 0 or y1 * y2 < 0):
+                continue
+
+            if abs(y1) > threshold and abs(y2) > threshold:
+                continue
+
+            mid_x = None
+            mid_y = None
+
+            for _ in range(15):
+                mid_x = (x1 + x2) / 2
+                mid_y = self.logic.evaluate_graph(mid_x, tokens=tokens)
+
+                if mid_y is None or np.isnan(mid_y):
+                    mid_x = None
+                    break
+
+                if abs(mid_y) < 1e-10:
+                    break
+
+                if (y1 <= 0 <= mid_y) or (y1 >= 0 >= mid_y):
+                    x2, y2 = mid_x, mid_y
+                else:
+                    x1, y1 = mid_x, mid_y
+
+            if mid_x is not None and mid_y is not None and abs(mid_y) < 1e-6:
+                roots.append(0.0 if abs(mid_x) < 1e-4 else round(mid_x, 6))
+
+        for i in range(1, len(y) - 1):
+            y0, y1, y2 = y[i - 1], y[i], y[i + 1]
+
+            if np.isnan(y0) or np.isnan(y1) or np.isnan(y2):
+                continue
+
+            if abs(y1) > threshold * 0.2:
+                continue
+
+            is_local_extreme = (y0 > y1 < y2) or (y0 < y1 > y2)
+            if not is_local_extreme:
+                continue
+
+            x0, x1, x2 = x[i - 1], x[i], x[i + 1]
+
+            best_x, best_y = x1, y1
+            for _ in range(15):
+                mid_left = (x0 + x1) / 2
+                mid_right = (x1 + x2) / 2
+                y_left = self.logic.evaluate_graph(mid_left, tokens=tokens)
+                y_right = self.logic.evaluate_graph(mid_right, tokens=tokens)
+
+                if y_left is None or y_right is None or np.isnan(y_left) or np.isnan(y_right):
+                    break
+
+                if abs(y_left) < abs(best_y):
+                    best_x, best_y = mid_left, y_left
+                if abs(y_right) < abs(best_y):
+                    best_x, best_y = mid_right, y_right
+
+                if abs(y_left) < abs(y_right):
+                    x2, x1 = x1, mid_left
+                else:
+                    x0, x1 = x1, mid_right
+
+            if abs(best_y) < 1e-6:
+                already_found = any(abs(root - best_x) < 1e-3 for root in roots)
+                if not already_found:
+                    roots.append(0.0 if abs(best_x) < 1e-4 else round(best_x, 6))
+
+        return roots
 
 
     def _find_nearest_point(self, click_x, click_y):
