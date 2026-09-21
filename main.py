@@ -4,7 +4,7 @@ from app import App
 def main():
 
     root = ctk.CTk()
-    root.title('Multi-Mode Calculator')
+    root.title('Mathbench')
 
     App(root)
     root.mainloop()
