@@ -15,8 +15,10 @@ class GraphUI(ctk.CTkFrame):
         self.height = 590
         self.logic = logic
         self.toggle_state = False
+        self.roots_visible = False
         self.secondary_buttons = {}
         self.plotted_functions = []
+        self.current_roots = []
 
         self.point_marker = None
         self.point_label = None
@@ -54,7 +56,7 @@ class GraphUI(ctk.CTkFrame):
 
         self.recenter_button = ctk.CTkButton(
             self.canvas_frame,
-            text='⊙',
+            text='⌖',
             font=('Jetbrains Mono', 16),
             width=18,
             height=18,
@@ -63,20 +65,19 @@ class GraphUI(ctk.CTkFrame):
             hover_color='#2E2E2E',
             command=self.recenter
         )
-        self.recenter_button.place(relx=0.0, rely=0.0, anchor='nw', x=4, y=5)
+        self.recenter_button.place(relx=0.0, rely=0.0, anchor='nw', x=1, y=4)
 
         self.recenter_button.configure(cursor='hand2')
         self.recenter_button.bind('<Enter>', lambda e: self.recenter_button.configure(text_color='#FFFFFF'))
-        self.recenter_button.bind('<Leave>', lambda e: self.recenter_button.configure(text_color='#BBBBBB'))
-        
+        self.recenter_button.bind('<Leave>', lambda e: self.recenter_button.configure(text_color='#BBBBBB'))        
 
-        self.vertical_separator = ctk.CTkFrame(
+        self.vertical_separator_1 = ctk.CTkFrame(
             self.canvas_frame,
             width=1,
             height=28,
             fg_color='#444444'
         )
-        self.vertical_separator.place(relx=0.0, rely=0.0, anchor='nw', x=30, y=5)
+        self.vertical_separator_1.place(relx=0.0, rely=0.0, anchor='nw', x=30, y=5)
 
         self.zoom_in_button = ctk.CTkButton(
             self.canvas_frame,
@@ -111,6 +112,29 @@ class GraphUI(ctk.CTkFrame):
         self.zoom_out_button.configure(cursor='hand2')
         self.zoom_out_button.bind('<Enter>', lambda e: self.zoom_out_button.configure(text_color='#FFFFFF'))
         self.zoom_out_button.bind('<Leave>', lambda e: self.zoom_out_button.configure(text_color='#BBBBBB'))
+
+        self.vertical_separator_1 = ctk.CTkFrame(
+            self.canvas_frame,
+            width=1,
+            height=28,
+            fg_color='#444444'
+        )
+        self.vertical_separator_1.place(relx=0.0, rely=0.0, anchor='nw', x=82, y=5)
+
+        self.toggle_roots_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='☉',
+            font=('Jetbrains Mono', 16),
+            width=18,
+            height=18,
+            text_color='#BBBBBB',
+            fg_color='#2E2E2E',
+            hover_color='#2E2E2E',
+            command=self.toggle_roots
+        )
+        self.toggle_roots_button.place(relx=0.0, rely=0.0, anchor='nw', x=83, y=7)
+
+        self.toggle_roots_button.configure(cursor='hand2')
 
         self.coords_label = ctk.CTkLabel(
             self.canvas_frame,
@@ -336,6 +360,7 @@ class GraphUI(ctk.CTkFrame):
 
         self.ax.clear()
         self.plotted_functions.clear()
+        self.current_roots = []
 
         self.point_marker = None
         self.point_label = None
@@ -368,6 +393,18 @@ class GraphUI(ctk.CTkFrame):
         for button, labels in self.secondary_buttons.items():
             new_button = labels[1] if self.toggle_state else labels[0]
             button.configure(text=new_button)
+
+
+    def toggle_roots(self):
+
+        self.roots_visible = not self.roots_visible
+
+        if self.roots_visible:
+            self.toggle_roots_button.configure(text_color='#FFFFFF')
+            self._show_roots(self.current_roots)
+        else:
+            self.toggle_roots_button.configure(text_color='#BBBBBB')
+            self._show_roots([])
 
 
     def on_hover(self, event):
@@ -462,23 +499,25 @@ class GraphUI(ctk.CTkFrame):
 
     def _redraw_curves(self):
 
-            if not self.plotted_functions:
-                return
+        if not self.plotted_functions:
+            self.current_roots = []
+            return
 
-            try:
-                xlim = self.ax.get_xlim()
-                x = np.linspace(xlim[0], xlim[1], 400)
+        try:
+            xlim = self.ax.get_xlim()
+            x = np.linspace(xlim[0], xlim[1], 400)
+            self.current_roots = []
 
-                roots = []
+            for plotted_function in self.plotted_functions:
+                y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
+                plotted_function['line'].set_data(x, y)
+                self.current_roots.extend(self._find_roots(x, y, plotted_function['tokens']))
 
-                for plotted_function in self.plotted_functions:
-                    y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
-                    plotted_function['line'].set_data(x, y)
-                    roots.extend(self._find_roots(x, y, plotted_function['tokens']))
+            if self.roots_visible:
+                self._show_roots(self.current_roots)
 
-                self._show_roots(roots)
-            except SyntaxError:
-                pass
+        except SyntaxError:
+            pass
 
 
     def _find_roots(self, x, y, tokens):
@@ -486,7 +525,7 @@ class GraphUI(ctk.CTkFrame):
         roots = []
         finite_y = y[~np.isnan(y)]
         y_range = finite_y.max() - finite_y.min() if finite_y.size else 1.0
-        threshold = max(y_range * 0.05, 1e-6)
+        root_tolerance = max(y_range * 0.05, 1e-6)
 
         for i in range(len(y) - 1):
             y1, y2 = y[i], y[i+1]
@@ -498,13 +537,13 @@ class GraphUI(ctk.CTkFrame):
             if not (y1 == 0 or y1 * y2 < 0):
                 continue
 
-            if abs(y1) > threshold and abs(y2) > threshold:
+            if abs(y1) > root_tolerance and abs(y2) > root_tolerance:
                 continue
 
             mid_x = None
             mid_y = None
 
-            for _ in range(15):
+            for _ in range(50):
                 mid_x = (x1 + x2) / 2
                 mid_y = self.logic.evaluate_graph(mid_x, tokens=tokens)
 
@@ -512,7 +551,7 @@ class GraphUI(ctk.CTkFrame):
                     mid_x = None
                     break
 
-                if abs(mid_y) < 1e-10:
+                if mid_y == 0 or abs(x2 - x1) < 1e-10:
                     break
 
                 if (y1 <= 0 <= mid_y) or (y1 >= 0 >= mid_y):
@@ -529,7 +568,7 @@ class GraphUI(ctk.CTkFrame):
             if np.isnan(y0) or np.isnan(y1) or np.isnan(y2):
                 continue
 
-            if abs(y1) > threshold * 0.2:
+            if abs(y1) > root_tolerance * 0.2:
                 continue
 
             is_local_extreme = (y0 > y1 < y2) or (y0 < y1 > y2)
@@ -597,46 +636,78 @@ class GraphUI(ctk.CTkFrame):
 
     def _show_roots(self, roots):
 
-        if self.root_markers is not None:
-            for marker, label in self.root_markers:
-                marker.remove()
-                label.remove()
-            self.root_markers = None
+        if self.root_markers is None:
+            self.root_markers = []
 
-        if not roots:
+        if not self.roots_visible:
+            for marker, label in self.root_markers:
+                marker.set_visible(False)
+                label.set_visible(False)
             self.canvas.draw_idle()
             return
 
-        self.root_markers = []
+        xlim = self.ax.get_xlim()
+        x_range = xlim[1] - xlim[0]
+        match_tolerance = max(x_range * 0.01, 1e-3)
+        matched_markers = set()
 
         for root in roots:
-            root_marker, = self.ax.plot(
-                [root], [0],
-                marker='o',
-                markersize=6,
-                color='#FFFFFF',
-                markeredgecolor='#000000',
-                markeredgewidth=1,
-                zorder=5
-            )
+            closest_index = None
+            closest_distance = match_tolerance
 
-            root_label = self.ax.annotate(
-                f'({root:.3g}, 0)',
-                xy=(root, 0),
-                xytext=(8, 8),
-                textcoords='offset points',
-                color='#FFFFFF',
-                fontsize=9,
-                fontfamily='monospace',
-                bbox=dict(
-                    boxstyle='round,pad=0.3',
-                    fc='#2E2E2E',
-                    ec='#555555',
-                    lw=0.5
+            for index, (marker, _) in enumerate(self.root_markers):
+                if index in matched_markers:
+                    continue
+
+                marker_x = marker.get_xdata()[0]
+                distance = abs(marker_x - root)
+                if distance < closest_distance:
+                    closest_index = index
+                    closest_distance = distance
+
+            if closest_index is None:
+                root_marker, = self.ax.plot(
+                    [root], [0],
+                    marker='o',
+                    markersize=6,
+                    color='#FFFFFF',
+                    markeredgecolor='#000000',
+                    markeredgewidth=1,
+                    zorder=5
                 )
-            )
 
-            self.root_markers.append((root_marker, root_label))
+                root_label = self.ax.annotate(
+                    f'({root:.3g}, 0)',
+                    xy=(root, 0),
+                    xytext=(8, 8),
+                    textcoords='offset points',
+                    color='#FFFFFF',
+                    fontsize=9,
+                    fontfamily='monospace',
+                    bbox=dict(
+                        boxstyle='round,pad=0.3',
+                        fc='#2E2E2E',
+                        ec='#555555',
+                        lw=0.5
+                    )
+                )
+                self.root_markers.append((root_marker, root_label))
+                closest_index = len(self.root_markers) - 1
+
+            marker, label = self.root_markers[closest_index]
+            marker.set_data([root], [0])
+            marker.set_visible(True)
+            label.xy = (root, 0)
+            label.set_text(f'({root:.3g}, 0)')
+            label.set_visible(True)
+            matched_markers.add(closest_index)
+
+        for index, (marker, label) in enumerate(self.root_markers):
+            marker_x = marker.get_xdata()[0]
+            in_range = xlim[0] <= marker_x <= xlim[1]
+            if index not in matched_markers:
+                marker.set_visible(in_range)
+                label.set_visible(in_range)
 
         self.canvas.draw_idle()
 
