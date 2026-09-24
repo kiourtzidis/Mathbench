@@ -11,8 +11,8 @@ class GraphUI(ctk.CTkFrame):
 
         super().__init__(parent, fg_color='#1F1F1F')
 
-        self.width = 500
-        self.height = 590
+        self.width = 530
+        self.height = 620
         self.logic = logic
         self.toggle_state = False
         self.roots_visible = False
@@ -173,8 +173,8 @@ class GraphUI(ctk.CTkFrame):
         self.function_entry.grid(row=0, column=0, columnspan=2, sticky='nsew', padx=2, pady=(2, 6))
 
         self.function_entry.configure(cursor='xterm')
-        self.function_entry.bind('<Return>', self.plot_function)
-        self.function_entry.bind('<KeyRelease>', self._sync_from_entry)
+        self.function_entry.bind('<KeyRelease>', self._handle_key_release)
+        self.function_entry.bind('<Return>', self.plot_function)        
 
         self.plot_button = ctk.CTkButton(
             self.controls_frame,
@@ -209,29 +209,41 @@ class GraphUI(ctk.CTkFrame):
 
         graph_buttons = (
             (('C', 'clear'),
+             ('⌫', 'backspace'),
              ('.', 'decimal'),
              ('+', 'operator'),
-             ('-', 'operator'),
-             ('×', 'operator'),
-             ('÷', 'operator')),
-
-            ((('sin', 'sin⁻¹'), 'function'),
-             (('cos', 'cos⁻¹'), 'function'),
-             (('tan', 'tan⁻¹'), 'function'),
-             (('csc', 'csc⁻¹'), 'function'),
-             (('sec', 'sec⁻¹'), 'function'),
-             (('cot', 'cot⁻¹'), 'function')),
-
-            ((('x²', '√'), 'function'),
+             (('x²', '√'), 'function'),
              (('x³', '∛'), 'function'),
-             (('xʸ', '|x|'), 'function'),
+             (('xʸ', '|x|'), 'function')),
+
+            (('1', 'number'),
+             ('2', 'number'),
+             ('3', 'number'),
+             ('-', 'operator'),
              (('log', '10ˣ'), 'function'),
              (('log₂', '2ˣ'), 'function'),
              (('ln', 'eˣ'), 'function')),
 
-            (('(', 'parenthesis'),
-             (')', 'parenthesis'),
+            (('4', 'number'),
+             ('5', 'number'),
+             ('6', 'number'),
+             ('×', 'operator'),
+             (('sin', 'sin⁻¹'), 'function'),
+             (('cos', 'cos⁻¹'), 'function'),
+             (('tan', 'tan⁻¹'), 'function')),
+
+            (('7', 'number'),
+             ('8', 'number'),
+             ('9', 'number'),
+             ('÷', 'operator'),
+             (('csc', 'csc⁻¹'), 'function'),
+             (('sec', 'sec⁻¹'), 'function'),
+             (('cot', 'cot⁻¹'), 'function')),
+
+            (('0', 'number'),
              ('x', 'variable'),
+             ('(', 'parenthesis'),
+             (')', 'parenthesis'),
              ('π', 'constant'),
              ('e', 'constant'),
              ('⇄', 'toggle'))
@@ -251,14 +263,23 @@ class GraphUI(ctk.CTkFrame):
                     text = labels
 
                 if type == 'clear':
-                        button = ctk.CTkButton(
-                            self.buttons_frame,
-                            text=text, 
-                            font=('Jetbrains Mono', 20), 
-                            fg_color='#E07B1A', 
-                            hover_color='#FF944D',
-                            command=lambda l=labels: self._graph_click(l)
-                        )
+                    button = ctk.CTkButton(
+                        self.buttons_frame,
+                        text=text, 
+                        font=('Jetbrains Mono', 20), 
+                        fg_color='#E07B1A', 
+                        hover_color='#FF944D',
+                        command=lambda l=labels: self._graph_click(l)
+                    )
+                elif type == 'backspace':
+                    button = ctk.CTkButton(
+                        self.buttons_frame,
+                        text=text,
+                        font=('Jetbrains Mono', 20),
+                        fg_color='#262626',
+                        hover_color='#C42B2B',
+                        command=lambda l=labels: self._graph_click(l)
+                    )
                 elif type == 'toggle':
                     button = ctk.CTkButton(
                         self.buttons_frame,
@@ -268,6 +289,15 @@ class GraphUI(ctk.CTkFrame):
                         hover_color='#4A4A4A', 
                         command=lambda l=labels: self._graph_click(l)
                         )
+                elif type == 'number':
+                    button = ctk.CTkButton(
+                        self.buttons_frame,
+                        text=text,
+                        font=('Jetbrains Mono', 20),
+                        fg_color='#3C3C3C',
+                        hover_color='#4A4A4A',
+                        command=lambda t=text: self._graph_click(t)
+                    )
                 else:
                     button = ctk.CTkButton(
                         self.buttons_frame,
@@ -286,8 +316,8 @@ class GraphUI(ctk.CTkFrame):
 
         for r in range(len(graph_buttons)):
             self.buttons_frame.grid_rowconfigure(r, weight=1)
-        for c in range(6):
-            self.buttons_frame.grid_columnconfigure(c, weight=1)
+        for c in range(len(graph_buttons[0])):
+            self.buttons_frame.grid_columnconfigure(c, weight=1, uniform='button_columns')
 
 
     def _style_axes(self):
@@ -374,7 +404,8 @@ class GraphUI(ctk.CTkFrame):
 
         if symbol == 'C':
             self.logic.clear()
-
+        elif symbol == '⌫':
+            self.logic.backspace()
         else:
             self.logic.append(symbol)
 
@@ -484,17 +515,20 @@ class GraphUI(ctk.CTkFrame):
         self.handle_symbol(symbol)
 
 
-    def _sync_from_entry(self, event=None):
+    def _handle_key_release(self, event=None):
+
+        if event is None:
+            return
 
         text = self.function_entry.get()
+        self.logic.raw_input = text
+        self.logic.calculated = False
 
         try:
-            self.logic.raw_input = text
-            self.logic.tokens = self.logic.lexer.tokenize(self.logic.raw_input)
-            print(self.logic.tokens)
+            self.logic.tokens = self.logic.lexer.tokenize(text)
             self.logic._update_expressions_from_tokens()
         except SyntaxError:
-            pass
+            self.logic.display_expression = text
 
 
     def _redraw_curves(self):
