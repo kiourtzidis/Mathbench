@@ -11,7 +11,7 @@ class GraphUI(ctk.CTkFrame):
 
         super().__init__(parent, fg_color='#1F1F1F')
 
-        self.width = 530
+        self.width = 520
         self.height = 620
         self.logic = logic
         self.toggle_state = False
@@ -174,6 +174,7 @@ class GraphUI(ctk.CTkFrame):
 
         self.function_entry.configure(cursor='xterm')
         self.function_entry.bind('<KeyRelease>', self._handle_key_release)
+        self.function_entry.bind('<BackSpace>', self._handle_backspace)
         self.function_entry.bind('<Return>', self.plot_function)        
 
         self.plot_button = ctk.CTkButton(
@@ -520,15 +521,27 @@ class GraphUI(ctk.CTkFrame):
         if event is None:
             return
 
+        if event.keysym in ('Return', 'BackSpace'):
+            return None
+
         text = self.function_entry.get()
         self.logic.raw_input = text
         self.logic.calculated = False
 
         try:
             self.logic.tokens = self.logic.lexer.tokenize(text)
+            print(self.logic.tokens)
             self.logic._update_expressions_from_tokens()
         except SyntaxError:
             self.logic.display_expression = text
+
+
+    def _handle_backspace(self, event=None):
+
+            self.logic.backspace()
+            self.update_typing_display()
+
+            return 'break'
 
 
     def _redraw_curves(self):
