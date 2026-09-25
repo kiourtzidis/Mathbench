@@ -524,16 +524,28 @@ class GraphUI(ctk.CTkFrame):
         if event.keysym in ('Return', 'BackSpace'):
             return None
 
-        text = self.function_entry.get()
-        self.logic.raw_input = text
-        self.logic.calculated = False
+        new_text = self.function_entry.get()
+        old_text = self.logic.display_expression
 
-        try:
-            self.logic.tokens = self.logic.lexer.tokenize(text)
-            print(self.logic.tokens)
-            self.logic._update_expressions_from_tokens()
-        except SyntaxError:
-            self.logic.display_expression = text
+        if new_text == old_text:
+            return
+
+        if len(new_text) > len(old_text) and new_text.startswith(old_text):
+            added = new_text[len(old_text):]
+            
+            try:
+                self.logic.append(added)
+            except SyntaxError:
+                pass
+            self.update_typing_display()
+        else:
+            self.function_entry.icursor('end')
+            try:
+                self.logic.raw_input = new_text
+                self.logic.tokens = self.logic.lexer.tokenize(new_text)
+                self.logic._update_expressions_from_tokens()
+            except SyntaxError:
+                pass
 
 
     def _handle_backspace(self, event=None):
