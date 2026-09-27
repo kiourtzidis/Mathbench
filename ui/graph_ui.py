@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import numpy as np
+from itertools import combinations
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
@@ -570,7 +571,11 @@ class GraphUI(ctk.CTkFrame):
             for plotted_function in self.plotted_functions:
                 y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
                 plotted_function['line'].set_data(x, y)
-                self.current_roots.extend(self._find_roots(x, y, plotted_function['tokens']))
+                roots = self._find_roots(x, y, plotted_function['tokens'])
+                self.current_roots.extend((root_x, 0.0) for root_x in roots)
+
+            for func_a, func_b in combinations(self.plotted_functions, 2):
+                self.current_roots.extend(self._find_intersections(x, func_a['tokens'], func_b['tokens']))
 
             if self.roots_visible:
                 self._show_roots(self.current_roots)
@@ -579,7 +584,16 @@ class GraphUI(ctk.CTkFrame):
             pass
 
 
-    def _find_roots(self, x, y, tokens):
+    def _find_roots(self, x, y, tokens, tokens_b=None):
+
+        def evaluate(xi):
+            if tokens_b is None:
+                return self.logic.evaluate_graph(xi, tokens=tokens)
+            y_a = self.logic.evaluate_graph(xi, tokens=tokens)
+            y_b = self.logic.evaluate_graph(xi, tokens=tokens_b)
+            if y_a is None or y_b is None:
+                return None
+            return y_a - y_b
 
         roots = []
         finite_y = y[~np.isnan(y)]
@@ -604,7 +618,7 @@ class GraphUI(ctk.CTkFrame):
 
             for _ in range(50):
                 mid_x = (x1 + x2) / 2
-                mid_y = self.logic.evaluate_graph(mid_x, tokens=tokens)
+                mid_y = evaluate(mid_x)
 
                 if mid_y is None or np.isnan(mid_y):
                     mid_x = None
@@ -640,8 +654,8 @@ class GraphUI(ctk.CTkFrame):
             for _ in range(15):
                 mid_left = (x0 + x1) / 2
                 mid_right = (x1 + x2) / 2
-                y_left = self.logic.evaluate_graph(mid_left, tokens=tokens)
-                y_right = self.logic.evaluate_graph(mid_right, tokens=tokens)
+                y_left = evaluate(mid_left)
+                y_right = evaluate(mid_right)
 
                 if y_left is None or y_right is None or np.isnan(y_left) or np.isnan(y_right):
                     break
@@ -662,6 +676,23 @@ class GraphUI(ctk.CTkFrame):
                     roots.append(0.0 if abs(best_x) < 1e-4 else round(best_x, 6))
 
         return roots
+
+
+    def _find_intersections(self, x, tokens_a, tokens_b):
+
+        y_a = np.array([self.logic.evaluate_graph(xi, tokens=tokens_a) for xi in x], dtype=float)
+        y_b = np.array([self.logic.evaluate_graph(xi, tokens=tokens_b) for xi in x], dtype=float)
+        y_diff = y_a - y_b
+
+        intersection_xs = self._find_roots(x, y_diff, tokens_a, tokens_b=tokens_b)
+
+        intersections = []
+        for ix in intersection_xs:
+            iy = self.logic.evaluate_graph(ix, tokens=tokens_a)
+            if iy is not None and not np.isnan(iy):
+                intersections.append((ix, round(iy, 6)))
+
+        return intersections
 
 
     def _find_nearest_point(self, click_x, click_y):
@@ -693,7 +724,7 @@ class GraphUI(ctk.CTkFrame):
         return closest_function, closest_x[closest_index], closest_y[closest_index]
 
 
-    def _show_roots(self, roots):
+    def _show_roots(self, points):
 
         if self.root_markers is None:
             self.root_markers = []
@@ -710,7 +741,7 @@ class GraphUI(ctk.CTkFrame):
         match_tolerance = max(x_range * 0.01, 1e-3)
         matched_markers = set()
 
-        for root in roots:
+        for point_x, point_y in points:
             closest_index = None
             closest_distance = match_tolerance
 
@@ -719,14 +750,14 @@ class GraphUI(ctk.CTkFrame):
                     continue
 
                 marker_x = marker.get_xdata()[0]
-                distance = abs(marker_x - root)
+                distance = abs(marker_x - point_x)
                 if distance < closest_distance:
                     closest_index = index
                     closest_distance = distance
 
             if closest_index is None:
                 root_marker, = self.ax.plot(
-                    [root], [0],
+                    [point_x], [point_y],
                     marker='o',
                     markersize=6,
                     color='#FFFFFF',
@@ -736,8 +767,8 @@ class GraphUI(ctk.CTkFrame):
                 )
 
                 root_label = self.ax.annotate(
-                    f'({root:.3g}, 0)',
-                    xy=(root, 0),
+                    f'({point_x:.3g}, {point_y:.3g})',
+                    xy=(point_x, point_y),
                     xytext=(8, 8),
                     textcoords='offset points',
                     color='#FFFFFF',
@@ -754,10 +785,10 @@ class GraphUI(ctk.CTkFrame):
                 closest_index = len(self.root_markers) - 1
 
             marker, label = self.root_markers[closest_index]
-            marker.set_data([root], [0])
+            marker.set_data([point_x], [point_y])
             marker.set_visible(True)
-            label.xy = (root, 0)
-            label.set_text(f'({root:.3g}, 0)')
+            label.xy = (point_x, point_y)
+            label.set_text(f'({point_x:.3g}, {point_y:.3g})')
             label.set_visible(True)
             matched_markers.add(closest_index)
 
