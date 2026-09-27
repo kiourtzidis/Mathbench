@@ -574,8 +574,8 @@ class GraphUI(ctk.CTkFrame):
                 roots = self._find_roots(x, y, plotted_function['tokens'])
                 self.current_roots.extend((root_x, 0.0) for root_x in roots)
 
-            for func_a, func_b in combinations(self.plotted_functions, 2):
-                self.current_roots.extend(self._find_intersections(x, func_a['tokens'], func_b['tokens']))
+            for function_a, function_b in combinations(self.plotted_functions, 2):
+                self.current_roots.extend(self._find_intersections(x, function_a['tokens'], function_b['tokens']))
 
             if self.roots_visible:
                 self._show_roots(self.current_roots)
@@ -584,12 +584,12 @@ class GraphUI(ctk.CTkFrame):
             pass
 
 
-    def _find_roots(self, x, y, tokens, tokens_b=None):
+    def _find_roots(self, x, y, tokens_a, tokens_b=None):
 
         def evaluate(xi):
             if tokens_b is None:
-                return self.logic.evaluate_graph(xi, tokens=tokens)
-            y_a = self.logic.evaluate_graph(xi, tokens=tokens)
+                return self.logic.evaluate_graph(xi, tokens=tokens_a)
+            y_a = self.logic.evaluate_graph(xi, tokens=tokens_a)
             y_b = self.logic.evaluate_graph(xi, tokens=tokens_b)
             if y_a is None or y_b is None:
                 return None
@@ -687,10 +687,10 @@ class GraphUI(ctk.CTkFrame):
         intersection_xs = self._find_roots(x, y_diff, tokens_a, tokens_b=tokens_b)
 
         intersections = []
-        for ix in intersection_xs:
-            iy = self.logic.evaluate_graph(ix, tokens=tokens_a)
+        for intersection_x in intersection_xs:
+            iy = self.logic.evaluate_graph(intersection_x, tokens=tokens_a)
             if iy is not None and not np.isnan(iy):
-                intersections.append((ix, round(iy, 6)))
+                intersections.append((intersection_x, round(iy, 6)))
 
         return intersections
 
@@ -856,15 +856,12 @@ class GraphUI(ctk.CTkFrame):
 
     def _on_pan_end(self, event):
 
-        nearest = None
-
         if self.pan_start is not None:
             distance_moved = np.hypot(event.x - self.pan_start[0], event.y - self.pan_start[1])
 
             if event.inaxes and distance_moved < 5:
                 nearest = self._find_nearest_point(event.xdata, event.ydata)
-
-        self._show_selected_point(nearest)
+                self._show_selected_point(nearest)
 
         self.pan_start = None
         self.pan_start_xlim = None
