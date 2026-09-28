@@ -15,11 +15,13 @@ class GraphUI(ctk.CTkFrame):
         self.width = 520
         self.height = 620
         self.logic = logic
-        self.toggle_state = False
-        self.roots_visible = False
+
         self.secondary_buttons = {}
         self.plotted_functions = []
         self.current_roots = []
+
+        self.toggle_state = False
+        self.roots_visible = False
 
         self.point_marker = None
         self.point_label = None
@@ -29,6 +31,8 @@ class GraphUI(ctk.CTkFrame):
         self.pan_start = None
         self.pan_start_xlim = None
         self.pan_start_ylim = None
+
+        self.trace_function = None
 
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=0)
@@ -848,10 +852,19 @@ class GraphUI(ctk.CTkFrame):
 
 
     def _on_pan_start(self, event):
-        if event.inaxes:
-            self.pan_start = (event.x, event.y)
-            self.pan_start_xlim = self.ax.get_xlim()
-            self.pan_start_ylim = self.ax.get_ylim()
+
+        self.trace_function = None
+
+        if not event.inaxes:
+            return
+
+        nearest = self._find_nearest_point(event.xdata, event.ydata)
+        if nearest:
+            self.trace_function = nearest[0]
+
+        self.pan_start = (event.x, event.y)
+        self.pan_start_xlim = self.ax.get_xlim()
+        self.pan_start_ylim = self.ax.get_ylim()
 
 
     def _on_pan_end(self, event):
@@ -866,9 +879,23 @@ class GraphUI(ctk.CTkFrame):
         self.pan_start = None
         self.pan_start_xlim = None
         self.pan_start_ylim = None
+        self.trace_function = None
 
 
     def _on_pan_move(self, event):
+
+        if self.trace_function:
+            if event.xdata is None:
+                return
+
+            x = event.xdata
+            y = self.logic.evaluate_graph(x, tokens=self.trace_function['tokens'])
+
+            if y is None or np.isnan(y):
+                return
+
+            self._show_selected_point((self.trace_function, x, y))
+            return
 
         dx_pixels = event.x - self.pan_start[0]
         dy_pixels = event.y - self.pan_start[1]
@@ -909,6 +936,6 @@ class GraphUI(ctk.CTkFrame):
 
         x_labels = [f'{t:.{decimals}f}' if t != 0 else '' for t in self.ax.get_xticks()]
         y_labels = [f'{t:.{decimals}f}' if t != 0 else '' for t in self.ax.get_yticks()]
-        
+            
         self.ax.set_xticklabels(x_labels)
         self.ax.set_yticklabels(y_labels)
