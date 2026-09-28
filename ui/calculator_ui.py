@@ -243,13 +243,13 @@ class CalculatorUI(ctk.CTkFrame):
 
         if event.keysym in ('Return', 'BackSpace'):
             return None
-        
+
         if self.logic.display_expression == 'Error' and event.char:
             self.logic.clear()
             self.typing_entry.delete(0, 'end')
             self.typing_entry.insert(0, event.char)
 
-        text = self.typing_entry.get().rstrip('\n')
+        text = self.typing_entry.get()
         self.logic.raw_input = text
 
         self.logic.calculated = False

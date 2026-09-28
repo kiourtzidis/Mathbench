@@ -71,7 +71,7 @@ class ScientificUI(CalculatorUI):
             ('mod', 'operator'),
             ('=', 'equal')
         )
-           
+
         for i, (symbol, type) in enumerate(basic_buttons):
 
             if type == 'number':
@@ -81,7 +81,8 @@ class ScientificUI(CalculatorUI):
                     font=('Jetbrains Mono', 20),
                     fg_color='#3C3C3C',
                     hover_color='#4A4A4A',
-                    command=lambda s=symbol: self.handle_symbol(s))
+                    command=lambda s=symbol: self.handle_symbol(s)
+                )
             elif type == 'operator' or type == 'decimal':
                 button = ctk.CTkButton(
                     self.basic_frame,
@@ -89,7 +90,8 @@ class ScientificUI(CalculatorUI):
                     font=('Jetbrains Mono', 20), 
                     fg_color='#262626', 
                     hover_color='#323232', 
-                    command=lambda s=symbol: self.handle_symbol(s))
+                    command=lambda s=symbol: self.handle_symbol(s)
+                )
             elif type == 'backspace':
                 button = ctk.CTkButton(
                     self.basic_frame, 
@@ -97,7 +99,8 @@ class ScientificUI(CalculatorUI):
                     font=('Jetbrains Mono', 20), 
                     fg_color='#262626', 
                     hover_color='#C42B2B', 
-                    command=lambda s=symbol: self.handle_symbol(s))
+                    command=lambda s=symbol: self.handle_symbol(s)
+                )
             else:
                 button = ctk.CTkButton(
                     self.basic_frame, 
