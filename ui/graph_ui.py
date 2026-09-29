@@ -12,7 +12,7 @@ class GraphUI(ctk.CTkFrame):
 
         super().__init__(parent, fg_color='#1F1F1F')
 
-        self.width = 520
+        self.width = 670
         self.height = 620
         self.logic = logic
 
