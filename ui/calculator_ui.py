@@ -86,7 +86,7 @@ class CalculatorUI(ctk.CTkFrame):
 
             expression, result = self.logic.calculate()
             if expression:
-                self.add_history_item(original_input, expression, result)
+                self.add_history_item(original_input, expression, result, angle_mode=self.logic.angle_mode_used)
 
         elif symbol == '±':
             self.logic.negate()
@@ -112,7 +112,7 @@ class CalculatorUI(ctk.CTkFrame):
             self.typing_entry.configure(font=ctk.CTkFont(size=24))
 
 
-    def add_history_item(self, raw_input, expression, result):
+    def add_history_item(self, raw_input, expression, result, angle_mode=None):
 
         line = f'{expression} = {result}'
 
@@ -145,6 +145,21 @@ class CalculatorUI(ctk.CTkFrame):
         formatted_line = self.format_history_item(line)
         item_label.configure(text=formatted_line)
 
+        column_offset = 0
+        if angle_mode is not None:
+            angle_badge = ctk.CTkLabel(
+                item_frame,
+                text=angle_mode,
+                font=('Jetbrains Mono', 11),
+                text_color='#8A8A8A',
+                fg_color='#3A3A3A',
+                corner_radius=6,
+                width=36,
+                height=18
+            )
+            angle_badge.grid(row=0, column=1, padx=(4, 0), pady=(2, 0))
+            column_offset = 1
+
         copy_button = ctk.CTkButton(
             item_frame,
             text='⧉',
@@ -155,7 +170,7 @@ class CalculatorUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 14),
             command=lambda l=line: self.history_copy(l)
         )
-        copy_button.grid(row=0, column=1, sticky='e', padx=(5, 0))
+        copy_button.grid(row=0, column=1 + column_offset, sticky='e', padx=(5, 0))
 
         copy_button.configure(cursor='hand2')
         copy_button.bind('<Enter>', lambda e: copy_button.configure(text_color='#FFFFFF'))
@@ -171,7 +186,7 @@ class CalculatorUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 14),
             command=lambda f=outer: self.history_delete(f)
         )
-        delete_button.grid(row=0, column=2, sticky='e', padx=(5, 0))
+        delete_button.grid(row=0, column=2 + column_offset, sticky='e', padx=(5, 0))
       
         delete_button.configure(cursor='hand2')
         delete_button.bind('<Enter>', lambda e: delete_button.configure(text_color='#FFFFFF'))
@@ -290,7 +305,7 @@ class CalculatorUI(ctk.CTkFrame):
 
         expression, result = self.logic.calculate()
         if expression:
-            self.add_history_item(original_input, expression, result)
+            self.add_history_item(original_input, expression, result, angle_mode=self.logic.angle_mode_used)
 
         self.update_typing_display()
 

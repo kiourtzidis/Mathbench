@@ -5,17 +5,27 @@ from core.lexer import Lexer
 from core.parser import Parser
 from core.exceptions import SyntaxError, MathError
 
+ANGLE_DEPENDENT_FUNCTIONS = frozenset({
+    'sin', 'cos', 'tan', 'csc', 'sec', 'cot', 
+    'arcsin', 'arccos', 'arctan', 'arccsc', 'arcsec', 'arccot'
+    })
+
 class CalculatorLogic:
 
     def __init__(self):
 
         self.raw_input = ''
         self.display_expression = ''
+
         self.calculated = False
         self.last_result = None
+
         self.angle_mode = 'DEG'
+        self.angle_mode_used = None
+
         self.tokens = []
         self.lexer = Lexer()
+
         self.function_library = {
             **math.__dict__,
             **math_functions.__dict__,
@@ -116,6 +126,9 @@ class CalculatorLogic:
                 return None, None
 
             original_expression = self.display_expression
+
+            uses_trig = any(token.eval_value in ANGLE_DEPENDENT_FUNCTIONS for token in self.tokens)
+            self.angle_mode_used = self.angle_mode if uses_trig else None
 
             parser = Parser(self._expand_tokens(self.tokens))
 
