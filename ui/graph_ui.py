@@ -578,6 +578,10 @@ class GraphUI(ctk.CTkFrame):
                 roots = self._find_roots(x, y, plotted_function['tokens'])
                 self.current_roots.extend((root_x, 0.0) for root_x in roots)
 
+                y_intercept = self.logic.evaluate_graph(0, tokens=plotted_function['tokens'])
+                if y_intercept is not None and not np.isnan(y_intercept):
+                    self.current_roots.append((0.0, round(y_intercept, 6)))
+
             for function_a, function_b in combinations(self.plotted_functions, 2):
                 self.current_roots.extend(self._find_intersections(x, function_a['tokens'], function_b['tokens']))
 
