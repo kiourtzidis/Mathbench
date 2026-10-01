@@ -132,14 +132,14 @@ class CalculatorUI(ctk.CTkFrame):
                 anchor='w',
                 justify='left',
                 fg_color='#444444',
-                text_color='#BFBFBF',
+                text_color='#DDDDDD',
                 font=ctk.CTkFont(size=24)
             )
         item_label.grid(row=0, column=0, sticky='nsew', padx=(5, 0), pady=(1, 0))
 
         item_label.configure(cursor='hand2')
         item_label.bind('<Enter>', lambda e: item_label.configure(text_color='#FFFFFF'))
-        item_label.bind('<Leave>', lambda e: item_label.configure(text_color='#BBBBBB'))
+        item_label.bind('<Leave>', lambda e: item_label.configure(text_color='#DDDDDD'))
         item_label.bind('<Button-1>', lambda e, r=raw_input: self.history_click(r))
 
         formatted_line = self.format_history_item(line)
@@ -174,7 +174,7 @@ class CalculatorUI(ctk.CTkFrame):
 
         copy_button.configure(cursor='hand2')
         copy_button.bind('<Enter>', lambda e: copy_button.configure(text_color='#FFFFFF'))
-        copy_button.bind('<Leave>', lambda e: copy_button.configure(text_color='#BBBBBB'))
+        copy_button.bind('<Leave>', lambda e: copy_button.configure(text_color='#DDDDDD'))
 
         delete_button = ctk.CTkButton(
             item_frame,
@@ -190,7 +190,7 @@ class CalculatorUI(ctk.CTkFrame):
       
         delete_button.configure(cursor='hand2')
         delete_button.bind('<Enter>', lambda e: delete_button.configure(text_color='#FFFFFF'))
-        delete_button.bind('<Leave>', lambda e: delete_button.configure(text_color='#BBBBBB'))
+        delete_button.bind('<Leave>', lambda e: delete_button.configure(text_color='#DDDDDD'))
 
         separator = ctk.CTkFrame(outer, height=1, fg_color='#555555')
         separator.pack(fill='x', pady=(0, 6))
