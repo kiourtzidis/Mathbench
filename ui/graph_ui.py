@@ -18,10 +18,11 @@ class GraphUI(ctk.CTkFrame):
 
         self.secondary_buttons = {}
         self.plotted_functions = []
-        self.current_roots = []
+        self.current_points = []
 
         self.toggle_state = False
-        self.roots_visible = False
+        self.intercepts_visible = False
+        self.intersections_visible = False
 
         self.point_marker = None
         self.point_label = None
@@ -126,7 +127,7 @@ class GraphUI(ctk.CTkFrame):
         )
         self.vertical_separator_1.place(relx=0.0, rely=0.0, anchor='nw', x=82, y=5)
 
-        self.toggle_roots_button = ctk.CTkButton(
+        self.toggle_intercepts_button = ctk.CTkButton(
             self.canvas_frame,
             text='☉',
             font=('Jetbrains Mono', 16),
@@ -135,11 +136,26 @@ class GraphUI(ctk.CTkFrame):
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
-            command=self.toggle_roots
+            command=self.toggle_intercepts
         )
-        self.toggle_roots_button.place(relx=0.0, rely=0.0, anchor='nw', x=83, y=7)
+        self.toggle_intercepts_button.place(relx=0.0, rely=0.0, anchor='nw', x=83, y=7)
 
-        self.toggle_roots_button.configure(cursor='hand2')
+        self.toggle_intercepts_button.configure(cursor='hand2')
+
+        self.toggle_intersections_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='∩',
+            font=('Jetbrains Mono', 18),
+            width=18,
+            height=18,
+            text_color='#BBBBBB',
+            fg_color='#2E2E2E',
+            hover_color='#2E2E2E',
+            command=self.toggle_intersections
+        )
+        self.toggle_intersections_button.place(relx=0.0, rely=0.0, anchor='nw', x=108, y=3)
+        
+        self.toggle_intersections_button.configure(cursor='hand2')
 
         self.coords_label = ctk.CTkLabel(
             self.canvas_frame,
@@ -396,7 +412,7 @@ class GraphUI(ctk.CTkFrame):
 
         self.ax.clear()
         self.plotted_functions.clear()
-        self.current_roots = []
+        self.current_points = []
 
         self.point_marker = None
         self.point_label = None
@@ -432,16 +448,24 @@ class GraphUI(ctk.CTkFrame):
             button.configure(text=new_button)
 
 
-    def toggle_roots(self):
+    def toggle_intercepts(self):
 
-        self.roots_visible = not self.roots_visible
+        self.intercepts_visible = not self.intercepts_visible
 
-        if self.roots_visible:
-            self.toggle_roots_button.configure(text_color='#FFFFFF')
-            self._show_roots(self.current_roots)
-        else:
-            self.toggle_roots_button.configure(text_color='#BBBBBB')
-            self._show_roots([])
+        self.toggle_intercepts_button.configure(
+            text_color='#FFFFFF' if self.intercepts_visible else '#BBBBBB'
+            )
+        self._show_points(self.current_points)
+
+
+    def toggle_intersections(self):
+
+        self.intersections_visible = not self.intersections_visible
+
+        self.toggle_intersections_button.configure(
+            text_color='#FFFFFF' if self.intersections_visible else '#BBBBBB'
+            )
+        self._show_points(self.current_points)
 
 
     def on_hover(self, event):
@@ -521,72 +545,33 @@ class GraphUI(ctk.CTkFrame):
         self.handle_symbol(symbol)
 
 
-    def _handle_key_release(self, event=None):
-
-        if event is None:
-            return
-
-        if event.keysym in ('Return', 'BackSpace'):
-            return None
-
-        new_text = self.function_entry.get()
-        old_text = self.logic.display_expression
-
-        if new_text == old_text:
-            return
-
-        if len(new_text) > len(old_text) and new_text.startswith(old_text):
-            added = new_text[len(old_text):]
-            
-            try:
-                self.logic.append(added)
-            except SyntaxError:
-                pass
-            self.update_typing_display()
-        else:
-            self.function_entry.icursor('end')
-            try:
-                self.logic.raw_input = new_text
-                self.logic.tokens = self.logic.lexer.tokenize(new_text)
-                self.logic._update_expressions_from_tokens()
-            except SyntaxError:
-                pass
-
-
-    def _handle_backspace(self, event=None):
-
-            self.logic.backspace()
-            self.update_typing_display()
-
-            return 'break'
-
-
     def _redraw_curves(self):
 
         if not self.plotted_functions:
-            self.current_roots = []
+            self.current_points = []
             return
 
         try:
             xlim = self.ax.get_xlim()
             x = np.linspace(xlim[0], xlim[1], 400)
-            self.current_roots = []
+            self.current_points = []
 
             for plotted_function in self.plotted_functions:
                 y = np.array([self.logic.evaluate_graph(xi, tokens=plotted_function['tokens']) for xi in x], dtype=float)
                 plotted_function['line'].set_data(x, y)
+
                 roots = self._find_roots(x, y, plotted_function['tokens'])
-                self.current_roots.extend((root_x, 0.0) for root_x in roots)
+                self.current_points.extend((root_x, 0.0, 'intercept') for root_x in roots)
 
                 y_intercept = self.logic.evaluate_graph(0, tokens=plotted_function['tokens'])
                 if y_intercept is not None and not np.isnan(y_intercept):
-                    self.current_roots.append((0.0, round(y_intercept, 6)))
+                    self.current_points.append((0.0, round(y_intercept, 6), 'intercept'))
 
             for function_a, function_b in combinations(self.plotted_functions, 2):
-                self.current_roots.extend(self._find_intersections(x, function_a['tokens'], function_b['tokens']))
+                for px, py in self._find_intersections(x, function_a['tokens'], function_b['tokens']):
+                    self.current_points.append((px, py, 'intersection'))
 
-            if self.roots_visible:
-                self._show_roots(self.current_roots)
+            self._show_points(self.current_points)
 
         except SyntaxError:
             pass
@@ -732,17 +717,18 @@ class GraphUI(ctk.CTkFrame):
         return closest_function, closest_x[closest_index], closest_y[closest_index]
 
 
-    def _show_roots(self, points):
+    def _show_points(self, points):
 
         if self.root_markers is None:
             self.root_markers = []
 
-        if not self.roots_visible:
-            for marker, label in self.root_markers:
-                marker.set_visible(False)
-                label.set_visible(False)
-            self.canvas.draw_idle()
-            return
+        visible_kinds = set()
+        if self.intercepts_visible:
+            visible_kinds.add('intercept')
+        if self.intersections_visible:
+            visible_kinds.add('intersection')
+
+        points = [(px, py) for px, py, kind in points if kind in visible_kinds]
 
         xlim = self.ax.get_xlim()
         x_range = xlim[1] - xlim[0]
@@ -795,17 +781,17 @@ class GraphUI(ctk.CTkFrame):
             marker, label = self.root_markers[closest_index]
             marker.set_data([point_x], [point_y])
             marker.set_visible(True)
+
             label.xy = (point_x, point_y)
             label.set_text(f'({point_x:.3g}, {point_y:.3g})')
             label.set_visible(True)
+
             matched_markers.add(closest_index)
 
         for index, (marker, label) in enumerate(self.root_markers):
-            marker_x = marker.get_xdata()[0]
-            in_range = xlim[0] <= marker_x <= xlim[1]
             if index not in matched_markers:
-                marker.set_visible(in_range)
-                label.set_visible(in_range)
+                marker.set_visible(False)
+                label.set_visible(False)
 
         self.canvas.draw_idle()
 
@@ -943,3 +929,43 @@ class GraphUI(ctk.CTkFrame):
             
         self.ax.set_xticklabels(x_labels)
         self.ax.set_yticklabels(y_labels)
+
+
+    def _handle_key_release(self, event=None):
+
+        if event is None:
+            return
+
+        if event.keysym in ('Return', 'BackSpace'):
+            return None
+    
+        new_text = self.function_entry.get()
+        old_text = self.logic.display_expression
+
+        if new_text == old_text:
+                return
+
+        if len(new_text) > len(old_text) and new_text.startswith(old_text):
+            added = new_text[len(old_text):]
+            
+            try:
+                self.logic.append(added)
+            except SyntaxError:
+                pass
+            self.update_typing_display()
+        else:
+            self.function_entry.icursor('end')
+            try:
+                self.logic.raw_input = new_text
+                self.logic.tokens = self.logic.lexer.tokenize(new_text)
+                self.logic._update_expressions_from_tokens()
+            except SyntaxError:
+                pass
+    
+    
+    def _handle_backspace(self, event=None):
+
+            self.logic.backspace()
+            self.update_typing_display()
+
+            return 'break'
