@@ -677,6 +677,10 @@ class GraphUI(ctk.CTkFrame):
         y_b = np.array([self.logic.evaluate_graph(xi, tokens=tokens_b) for xi in x], dtype=float)
         y_diff = y_a - y_b
 
+        finite_diff = y_diff[~np.isnan(y_diff)]
+        if np.allclose(finite_diff, 0, atol=1e-9):
+            return []
+
         intersection_xs = self._find_roots(x, y_diff, tokens_a, tokens_b=tokens_b)
 
         intersections = []
