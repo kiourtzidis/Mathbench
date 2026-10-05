@@ -63,6 +63,17 @@ class UnitUI(ctk.CTkFrame):
 
         self.winfo_toplevel().bind('<Button-1>', self._handle_entry_outside_click, add='+')
 
+        unit_bindings = (
+            ('<Control-s>', lambda: self._swap_units()),
+            ('<Control-BackSpace>', lambda: self._clear_from_entry()),
+        )
+        for sequence, action in unit_bindings:
+            self.winfo_toplevel().bind(
+                sequence, 
+                lambda event, callback=action: self._handle_shortcut(event, callback),
+                add='+'
+            )
+
         self._select_category(self.current_category)
 
 
@@ -358,6 +369,12 @@ class UnitUI(ctk.CTkFrame):
         self.to_entry.configure(state='readonly')
 
 
+    def _clear_from_entry(self):
+    
+            self.from_entry.delete(0, 'end')
+            self._convert()
+
+
     def _handle_entry_outside_click(self, event):
 
         widget = event.widget
@@ -367,3 +384,12 @@ class UnitUI(ctk.CTkFrame):
             widget = getattr(widget, 'master', None)
 
         self.focus_set()
+
+
+    def _handle_shortcut(self, event, action):
+
+        if not self.winfo_ismapped():
+            return
+
+        action()
+        return 'break'

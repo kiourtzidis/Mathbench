@@ -14,6 +14,8 @@ class ScientificUI(CalculatorUI):
         self._build_angle_switch()
         self._build_buttons()
 
+        self.winfo_toplevel().bind('<Control-Shift-D>', self._handle_angle_shortcut, add='+')
+
 
     def _build_angle_switch(self):
 
@@ -285,6 +287,15 @@ class ScientificUI(CalculatorUI):
         if self.fx_menu is not None and self.fx_menu.winfo_exists():
             self.fx_menu.destroy()
             self.fx_menu = None
+
+
+    def _handle_angle_shortcut(self, event=None):
+    
+            if not self.winfo_ismapped():
+                return
+    
+            self.toggle_angle()
+            return 'break'
 
 
     def _handle_toplevel_outside_click(self, event):

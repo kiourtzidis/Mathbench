@@ -39,6 +39,20 @@ class CurrencyUI(ctk.CTkFrame):
 
         self.winfo_toplevel().bind('<Button-1>', self._handle_outside_click, add='+')
 
+        currency_bindings = (
+            ('<Control-s>', self._swap_currencies),
+            ('<Control-BackSpace>', self._clear_from_entry),
+            ('<Control-r>', self._refresh),
+        )
+
+        for sequence, action in currency_bindings:
+            self.winfo_toplevel().bind(
+                sequence, 
+                lambda event, 
+                callback=action: self._handle_shortcut(event, callback), 
+                add='+'
+            )
+
 
     def _build_panel(self):
 
@@ -334,6 +348,12 @@ class CurrencyUI(ctk.CTkFrame):
         self.to_entry.configure(state='readonly')
 
 
+    def _clear_from_entry(self):
+    
+        self.from_entry.delete(0, 'end')
+        self._convert()
+
+
     def _display_currency(self, currency):
         flag = CURRENCY_FLAGS.get(currency, '')
         return f'{flag} {currency}'.strip()
@@ -352,3 +372,12 @@ class CurrencyUI(ctk.CTkFrame):
             widget = getattr(widget, 'master', None)
 
         self.focus_set()
+
+
+    def _handle_shortcut(self, event, action):
+
+        if not self.winfo_ismapped():
+            return
+
+        action()
+        return 'break'

@@ -45,6 +45,23 @@ class GraphUI(ctk.CTkFrame):
         self._build_controls()
         self._build_buttons()
 
+        graph_bindings = (
+            ('<Control-r>', self.recenter),
+            ('<Control-equal>', lambda: self.zoom(0.9)),
+            ('<Control-plus>', lambda: self.zoom(0.9)),
+            ('<Control-minus>', lambda: self.zoom(1.1)),
+            ('<Control-i>', self.toggle_intercepts),
+            ('<Control-j>', self.toggle_intersections),
+            ('<Control-l>', self.clear_functions),
+        )
+        
+        for sequence, action in graph_bindings:
+            self.winfo_toplevel().bind(
+                sequence,
+                lambda event, callback=action: self._handle_shortcut(event, callback),
+                add='+'
+            )
+
 
     def _build_canvas(self):
 
@@ -169,9 +186,7 @@ class GraphUI(ctk.CTkFrame):
         self.canvas.mpl_connect('motion_notify_event', self.on_hover)
         self.canvas.mpl_connect('scroll_event', self.on_scroll)
         self.canvas.mpl_connect('button_press_event', self._on_pan_start)
-        self.canvas.mpl_connect('button_release_event', self._on_pan_end)        
-
-        self.winfo_toplevel().bind('<Control-0>', lambda e: self.recenter())
+        self.canvas.mpl_connect('button_release_event', self._on_pan_end)
 
 
     def _build_controls(self):
@@ -973,3 +988,12 @@ class GraphUI(ctk.CTkFrame):
             self.update_typing_display()
 
             return 'break'
+
+
+    def _handle_shortcut(self, event, action):
+    
+        if not self.winfo_ismapped():
+            return
+    
+        action()
+        return 'break'

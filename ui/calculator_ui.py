@@ -20,6 +20,7 @@ class CalculatorUI(ctk.CTkFrame):
         self._build_display()
 
         self.winfo_toplevel().bind('<Button-1>', self._handle_entry_outside_click, add='+')
+        self.winfo_toplevel().bind('<Control-l>', self._handle_shortcut, add='+')
 
 
     def _build_history(self):
@@ -71,6 +72,8 @@ class CalculatorUI(ctk.CTkFrame):
         self.typing_entry.bind('<KeyRelease>', self._handle_key_release)
         self.typing_entry.bind('<BackSpace>', self._handle_backspace)
         self.typing_entry.bind('<Return>', self._handle_enter)
+
+        self.typing_entry.bind('<Control-BackSpace>', lambda e: self.handle_symbol('C'))
 
 
     def handle_symbol(self, symbol):
@@ -321,3 +324,12 @@ class CalculatorUI(ctk.CTkFrame):
             widget = getattr(widget, 'master', None)
 
         self.focus_set()
+
+
+    def _handle_shortcut(self, event):
+
+        if not self.winfo_ismapped():
+            return
+
+        self.history_clear()
+        return 'break'
