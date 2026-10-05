@@ -27,12 +27,12 @@ class App:
         self.currency_logic = CurrencyLogic()
         self.date_logic = DateLogic()
 
-        self.top_frame = ctk.CTkFrame(root, fg_color='#1F1F1F')
+        self.top_frame = ctk.CTkFrame(root, fg_color='#1F1F1F', corner_radius=0)
         self.top_frame.pack(side='top', fill='x')
 
         self.selected_mode = ctk.StringVar(value='Basic')
 
-        self.mode_frame = ctk.CTkFrame(root, fg_color='#2E2E2E')
+        self.mode_frame = ctk.CTkFrame(root, fg_color='#2E2E2E', corner_radius=0)
         self.mode_frame.pack(side='top', fill='both', expand=True)
 
         self.windows = {
@@ -51,12 +51,12 @@ class App:
             width=200,
             state='readonly',
             border_width=1,
+            text_color='#FFFFFF',
             fg_color='#2A2A2A',
             button_color='#3A3A3A',
             button_hover_color='#444444',
             dropdown_fg_color='#2A2A2A',
-            dropdown_text_color='white',
-            text_color='white',
+            dropdown_text_color='#FFFFFF',
             command=self.switch_mode
         )
         self.mode_selector.pack(pady=10)

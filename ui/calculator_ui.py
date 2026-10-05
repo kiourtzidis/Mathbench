@@ -4,7 +4,7 @@ class CalculatorUI(ctk.CTkFrame):
 
     def __init__(self, parent, logic, width, height, max_history_chars):
 
-        super().__init__(parent, fg_color='#1F1F1F')
+        super().__init__(parent, fg_color='#1F1F1F', corner_radius=0)
 
         self.logic = logic
         self.width = width
@@ -34,10 +34,10 @@ class CalculatorUI(ctk.CTkFrame):
         self.clear_history_button = ctk.CTkButton(
             self.history_frame,
             text='Clear History',
+            font=('Jetbrains Mono', 14),
             height=28,
             fg_color='#2A2A2A',
             hover_color='#323232',
-            font=('Jetbrains Mono', 14),
             command=self.history_clear
         )
         self.clear_history_button.grid(row=0, column=0, sticky='nsew', padx=4, pady=(4, 2))
@@ -60,12 +60,12 @@ class CalculatorUI(ctk.CTkFrame):
         self.typing_entry = ctk.CTkEntry(
             self.typing_frame,
             font=('Jetbrains Mono', 24),
-            fg_color='#2E2E2E',
             width=514,
-            height=50,
-            corner_radius=8,
+            height=50,  
+            fg_color='#2E2E2E',
             border_width=1,
-            border_color='#3C3C3C'
+            border_color='#3C3C3C',
+            corner_radius=8,
         )
         self.typing_entry.pack(side='left', fill='x', ipadx=6, pady=2)
 
