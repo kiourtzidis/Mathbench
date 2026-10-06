@@ -20,7 +20,18 @@ class CalculatorUI(ctk.CTkFrame):
         self._build_display()
 
         self.winfo_toplevel().bind('<Button-1>', self._handle_entry_outside_click, add='+')
-        self.winfo_toplevel().bind('<Control-l>', self._handle_shortcut, add='+')
+
+        calculator_bindings = (
+                    ('<Control-l>', self.history_clear),
+                    ('<Control-BackSpace>', lambda: self.handle_symbol('C'))
+                )
+
+        for sequence, action in calculator_bindings:
+            self.winfo_toplevel().bind(
+                sequence,
+                lambda event, callback=action: self._handle_shortcut(event, callback),
+                add='+'
+            )
 
 
     def _build_history(self):
@@ -326,10 +337,10 @@ class CalculatorUI(ctk.CTkFrame):
         self.focus_set()
 
 
-    def _handle_shortcut(self, event):
-
+    def _handle_shortcut(self, event, action):
+        
         if not self.winfo_ismapped():
             return
-
-        self.history_clear()
+    
+        action()
         return 'break'
