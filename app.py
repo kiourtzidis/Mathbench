@@ -11,6 +11,43 @@ from logic.unit_logic import UnitLogic
 from logic.currency_logic import CurrencyLogic
 from logic.date_logic import DateLogic
 
+BINDINGS = {
+    'Global': (
+        ('Ctrl+1 … 6', 'Switch mode'),
+        ('Ctrl+H', 'Show this window'),
+        ('Esc', 'Close this window')
+    ),
+    'Basic / Scientific': (
+        ('Enter', 'Calculate'),
+        ('Backspace', 'Delete last token'),
+        ('Ctrl+Backspace', 'Clear entry'),
+        ('Ctrl+L', 'Clear history'),
+        ('Ctrl+Shift+D', 'Toggle DEG / RAD (Scientific)')
+    ),
+    'Graph': (
+        ('Enter', 'Plot function'),
+        ('Backspace', 'Delete last token'),
+        ('Ctrl+Backspace', 'Clear entry'),
+        ('Ctrl+L', 'Clear functions'),
+        ('Ctrl+R', 'Recenter view'),
+        ('Ctrl+I', 'Show intercepts'),
+        ('Ctrl+J', 'Show intersections'),
+        ('Ctrl+Equal / Ctrl+Plus', 'Zoom in'),
+        ('Ctrl+Minus', 'Zoom out')
+    ),
+    'Unit': (
+        ('Backspace', 'Delete last token'),
+        ('Ctrl+Backspace', 'Clear entry'),
+        ('Ctrl+S', 'Swap units')
+    ),
+    'Currency': (
+        ('Backspace', 'Delete last token'),
+        ('Ctrl+Backspace', 'Clear entry'),
+        ('Ctrl+S', 'Swap currencies'),
+        ('Ctrl+R', 'Refresh rates')
+    ),
+}
+
 class App:
 
     def __init__(self, root):
@@ -27,8 +64,28 @@ class App:
         self.currency_logic = CurrencyLogic()
         self.date_logic = DateLogic()
 
+        self.bindings_popup = None
+
         self.top_frame = ctk.CTkFrame(root, fg_color='#1F1F1F', corner_radius=0)
         self.top_frame.pack(side='top', fill='x')
+
+        self.help_button = ctk.CTkButton(
+                self.top_frame,
+                text=' ?',
+                width=28,
+                height=28,
+                font=('Jetbrains Mono', 14),
+                anchor='center',
+                border_width=1,
+                fg_color='#242424',
+                hover_color='#2D2D2D',
+                text_color='#FFFFFF',
+                border_color='#333333',
+                command=self.show_shortcuts
+            )
+        self.help_button.place(relx=1.0, rely=0.0, anchor='ne', x=-10, y=10)
+
+        self.help_button.configure(cursor='hand2')
 
         self.selected_mode = ctk.StringVar(value='Basic')
 
@@ -64,12 +121,10 @@ class App:
         self.mode_selector.bind('<Enter>', lambda e: e.widget.configure(cursor='arrow'))
         self.mode_selector.bind('<Leave>', lambda e: e.widget.configure(cursor='arrow'))
 
-        self.root.bind_all('<Control-Key-1>', lambda e: self.switch_mode('Basic'))
-        self.root.bind_all('<Control-Key-2>', lambda e: self.switch_mode('Scientific'))
-        self.root.bind_all('<Control-Key-3>', lambda e: self.switch_mode('Graph'))
-        self.root.bind_all('<Control-Key-4>', lambda e: self.switch_mode('Unit'))
-        self.root.bind_all('<Control-Key-5>', lambda e: self.switch_mode('Currency'))
-        self.root.bind_all('<Control-Key-6>', lambda e: self.switch_mode('Date'))
+        for number, mode in enumerate(self.windows, start=1):
+            self.root.bind_all(f'<Control-Key-{number}>', lambda e, m=mode: self.switch_mode(m))
+
+        self.root.bind_all('<Control-h>', lambda e: self.show_shortcuts())
 
         self.current_window = self.windows['Basic']
         self.current_window.pack(fill='both')
@@ -94,3 +149,71 @@ class App:
         self.mode_selector.set(window)
 
         self.root.resizable(width=False, height=False)
+
+
+    def show_shortcuts(self):
+
+        if self.bindings_popup is not None and self.bindings_popup.winfo_exists():
+            self.bindings_popup.lift()
+            self.bindings_popup.focus()
+            return
+
+        popup = ctk.CTkToplevel(self.root, fg_color='#1F1F1F')
+
+        popup.title('Keyboard Shortcuts')
+
+        x = self.root.winfo_x() + (self.root.winfo_width() - 360) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - 320) // 2
+
+        popup.geometry(f'360x320+{x}+{y}')
+
+        popup.resizable(False, False)
+        popup.transient(self.root)
+
+        popup.bind('<Escape>', lambda e: popup.destroy())
+
+        scroll = ctk.CTkScrollableFrame(
+            popup,
+            fg_color='#1F1F1F',
+            scrollbar_button_color='#555555',
+            scrollbar_button_hover_color='#666666'
+        )
+        scroll.pack(fill='both', expand=True, padx=8, pady=8)
+        scroll.grid_columnconfigure(0, weight=0)
+        scroll.grid_columnconfigure(1, weight=1)
+
+        row = 0
+        for section, bindings in BINDINGS.items():
+
+            header = ctk.CTkLabel(
+                scroll,
+                text=section,
+                font=('Jetbrains Mono', 13, 'bold'),
+                text_color='#777777'
+            )
+            header.grid(row=row, column=0, columnspan=2, sticky='w', pady=(10, 4))
+            row += 1
+
+            for keys, description in bindings:
+                key_label = ctk.CTkLabel(
+                    scroll,
+                    text=keys,
+                    font=('Jetbrains Mono', 12),
+                    text_color='#FFFFFF',
+                    fg_color='#2E2E2E',
+                    corner_radius=4
+                )
+                key_label.grid(row=row, column=0, sticky='w', padx=(0, 12), pady=2, ipadx=4)
+
+                description_label = ctk.CTkLabel(
+                    scroll,
+                    text=description,
+                    font=('Jetbrains Mono', 12),
+                    text_color='#CCCCCC',
+                    anchor='center'
+                )
+                description_label.grid(row=row, column=1, sticky='ew', pady=2)
+                row += 1
+
+        self.bindings_popup = popup
+        popup.after(100, popup.focus)
