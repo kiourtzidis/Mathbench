@@ -22,9 +22,11 @@ class CalculatorUI(ctk.CTkFrame):
         self.winfo_toplevel().bind('<Button-1>', self._handle_entry_outside_click, add='+')
 
         calculator_bindings = (
-                    ('<Control-l>', self.history_clear),
-                    ('<Control-BackSpace>', lambda: self.handle_symbol('C'))
-                )
+            ('<Return>', self._handle_enter),
+            ('<BackSpace>', self._handle_backspace),
+            ('<Control-l>', self.history_clear),
+            ('<Control-BackSpace>', lambda: self.handle_symbol('C'))
+        )
 
         for sequence, action in calculator_bindings:
             self.winfo_toplevel().bind(
@@ -81,10 +83,6 @@ class CalculatorUI(ctk.CTkFrame):
         self.typing_entry.pack(side='left', fill='x', ipadx=6, pady=2)
 
         self.typing_entry.bind('<KeyRelease>', self._handle_key_release)
-        self.typing_entry.bind('<BackSpace>', self._handle_backspace)
-        self.typing_entry.bind('<Return>', self._handle_enter)
-
-        self.typing_entry.bind('<Control-BackSpace>', lambda e: self.handle_symbol('C'))
 
 
     def handle_symbol(self, symbol):

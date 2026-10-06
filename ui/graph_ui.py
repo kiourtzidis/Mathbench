@@ -46,6 +46,8 @@ class GraphUI(ctk.CTkFrame):
         self._build_buttons()
 
         graph_bindings = (
+            ('<Return>', self.plot_function),
+            ('<BackSpace>', self._handle_backspace),
             ('<Control-r>', self.recenter),
             ('<Control-equal>', lambda: self.zoom(0.9)),
             ('<Control-plus>', lambda: self.zoom(0.9)),
@@ -209,9 +211,7 @@ class GraphUI(ctk.CTkFrame):
         self.function_entry.grid(row=0, column=0, columnspan=2, sticky='nsew', padx=2, pady=(2, 6))
 
         self.function_entry.configure(cursor='xterm')
-        self.function_entry.bind('<KeyRelease>', self._handle_key_release)
-        self.function_entry.bind('<BackSpace>', self._handle_backspace)
-        self.function_entry.bind('<Return>', self.plot_function)        
+        self.function_entry.bind('<KeyRelease>', self._handle_key_release)       
 
         self.plot_button = ctk.CTkButton(
             self.controls_frame,
