@@ -1,6 +1,13 @@
 import customtkinter as ctk
 from ui.calculator_ui import CalculatorUI
 
+FX_FUNCTIONS = (
+    'round', 'floor', 'ceil', 'trunc', 'frac', 'sign', 'gamma', 'lgamma',
+    'csc', 'sec', 'csc⁻¹', 'sec⁻¹',
+    'sinh', 'cosh', 'tanh', 'csch', 'sech', 'coth',
+    'sinh⁻¹', 'cosh⁻¹', 'tanh⁻¹', 'csch⁻¹', 'sech⁻¹', 'coth⁻¹',
+)
+
 class ScientificUI(CalculatorUI):
 
     def __init__(self, parent, logic):
@@ -14,7 +21,10 @@ class ScientificUI(CalculatorUI):
         self._build_angle_switch()
         self._build_buttons()
 
+        self.winfo_toplevel().bind('<Button-1>', self._handle_toplevel_outside_click, add='+')
         self.winfo_toplevel().bind('<Control-Shift-D>', self._handle_angle_shortcut, add='+')
+        self.winfo_toplevel().bind('<Escape>', self._handle_escape, add='+')
+        self.bind('<Unmap>', lambda e: self._close_fx_menu())
 
 
     def _build_angle_switch(self):
@@ -240,8 +250,9 @@ class ScientificUI(CalculatorUI):
     def _open_fx_menu(self):
 
         self.fx_menu = ctk.CTkToplevel(self)
-
         self.fx_menu.overrideredirect(True)
+
+        self.fx_menu.configure(cursor='hand2')
 
         button_x = self.fx_button.winfo_rootx()
         button_y = self.fx_button.winfo_rooty()
@@ -256,46 +267,75 @@ class ScientificUI(CalculatorUI):
         fx_scroll = ctk.CTkScrollableFrame(
             self.fx_menu,
             fg_color='#1F1F1F',
-            scrollbar_button_color= '#555555',
+            scrollbar_button_color='#555555',
             scrollbar_button_hover_color='#666666'
         )
         fx_scroll.pack(fill='both', expand=True, padx=10, pady=10)
 
-        functions = ('round', 'floor', 'ceil', 'trunc', 'frac', 'sign', 'gamma', 'lgamma', 'csc', 'sec',
-        'csc⁻¹', 'sec⁻¹', 'sinh', 'cosh', 'tanh', 'csch', 'sech', 'coth', 'sinh⁻¹', 'cosh⁻¹', 'tanh⁻¹',
-        'csch⁻¹', 'sech⁻¹', 'coth⁻¹')
-
-        for function in functions:
+        self._fx_buttons = []
+        for function in FX_FUNCTIONS:
             button = ctk.CTkButton(
                 fx_scroll,
-                text=f'{function}(x)',
-                fg_color='#1F1F1F',
-                hover_color='#323232',
-                text_color='#FFFFFF',
-                corner_radius=0,
                 height=32,
                 font=('Jetbrains Mono', 18),
+                text=f'{function}(x)',
+                fg_color='#1F1F1F',
+                text_color='#FFFFFF',
+                hover=False,
+                corner_radius=0,
                 command=lambda f=function: self._insert_function(f)
             )
             button.pack(fill='x')
-            button.configure(cursor='hand2')
+            self._fx_buttons.append(button)
 
-        self.winfo_toplevel().bind('<Button-1>', self._handle_toplevel_outside_click, add='+')
+        self._update_fx_hover()
 
 
     def _close_fx_menu(self):
         if self.fx_menu is not None and self.fx_menu.winfo_exists():
             self.fx_menu.destroy()
             self.fx_menu = None
+            self._fx_buttons = []
+
+
+    def _update_fx_hover(self):
+    
+        if self.fx_menu is None or not self.fx_menu.winfo_exists():
+            return
+
+        try:
+            mouse_x, mouse_y = self.fx_menu.winfo_pointerxy()
+            for button in self._fx_buttons:
+                button_x = button.winfo_rootx()
+                button_y = button.winfo_rooty()
+                button_width = button.winfo_width()
+                button_height = button.winfo_height()
+
+                inside = (button_x <= mouse_x < button_x + button_width and button_y <= mouse_y < button_y + button_height)
+                button.configure(fg_color='#323232' if inside else '#1F1F1F')
+
+        except Exception:
+            pass
+
+        self.fx_menu.after(50, self._update_fx_hover)
+
+
+    def _handle_escape(self, event=None):
+
+        if self.fx_menu is None or not self.fx_menu.winfo_exists():
+            return
+
+        self._close_fx_menu()
+        return 'break'
 
 
     def _handle_angle_shortcut(self, event=None):
     
-            if not self.winfo_ismapped():
-                return
-    
-            self.toggle_angle()
-            return 'break'
+        if not self.winfo_ismapped():
+            return
+
+        self.toggle_angle()
+        return 'break'
 
 
     def _handle_toplevel_outside_click(self, event):
