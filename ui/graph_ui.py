@@ -358,50 +358,51 @@ class GraphUI(ctk.CTkFrame):
 
 
     def _style_axes(self):
-    
-            self.ax.set_facecolor('#2E2E2E')
-            self.fig.patch.set_facecolor('#2E2E2E')
-            self.ax.grid(True, color='#444444')
-    
-            self.ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
-            self.ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    
-            self.ax.tick_params(
-                colors='#AAAAAA',
-                labelsize=8
-            )
-    
-            self.ax.spines['top'].set_visible(False)
-            self.ax.spines['right'].set_visible(False)
-    
-            self.ax.spines['bottom'].set_position('zero')
-            self.ax.spines['left'].set_position('zero')
-    
-            self.ax.spines['bottom'].set_color('white')
-            self.ax.spines['left'].set_color('white')
-            self.ax.spines['bottom'].set_linewidth(1)
-            self.ax.spines['left'].set_linewidth(1)
-    
-            self.ax.title.set_color('white')
-            self.ax.yaxis.label.set_color('white')
-            self.ax.xaxis.label.set_color('white')
-    
-            self.ax.annotate(
-                '0',
-                xy=(0, 0),
-                xytext=(-3, -3),
-                textcoords='offset points',
-                color='#AAAAAA',
-                fontsize=8,
-                ha='right',
-                va='top'
-            )
-    
-            self.ax.set_xlim(-10, 10)
-            self.ax.set_ylim(-10, 10)
-    
-            self._refresh_tick_labels()
-    
+
+        self.ax.set_facecolor('#2E2E2E')
+        self.fig.patch.set_facecolor('#2E2E2E')
+        self.ax.grid(True, color='#444444')
+
+        self.ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+        self.ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+
+        self.ax.tick_params(
+            colors='#AAAAAA',
+            labelsize=8
+        )
+
+        self.ax.spines['top'].set_visible(False)
+        self.ax.spines['right'].set_visible(False)
+
+        self.ax.spines['bottom'].set_position('zero')
+        self.ax.spines['left'].set_position('zero')
+
+        self.ax.spines['bottom'].set_color('white')
+        self.ax.spines['left'].set_color('white')
+        self.ax.spines['bottom'].set_linewidth(1)
+        self.ax.spines['left'].set_linewidth(1)
+
+        self.ax.title.set_color('white')
+        self.ax.yaxis.label.set_color('white')
+        self.ax.xaxis.label.set_color('white')
+
+        self.ax.annotate(
+            '0',
+            xy=(0, 0),
+            xytext=(-3, -3),
+            textcoords='offset points',
+            color='#AAAAAA',
+            fontsize=8,
+            ha='right',
+            va='top'
+        )
+
+        self.ax.set_xlim(-10, 10)
+        self.ax.set_ylim(-10, 10)
+
+        self.ax.xaxis.set_major_formatter(self._format_tick)
+        self.ax.yaxis.set_major_formatter(self._format_tick)
+
 
     def plot_function(self, event=None):
 
@@ -532,7 +533,6 @@ class GraphUI(ctk.CTkFrame):
 
         self._redraw_curves()
         self.canvas.draw_idle()
-        self._refresh_tick_labels()
 
 
     def recenter(self):
@@ -542,8 +542,6 @@ class GraphUI(ctk.CTkFrame):
 
         self._redraw_curves()
         self.canvas.draw_idle()
-
-        self._refresh_tick_labels()
 
 
     def _graph_click(self, labels):
@@ -926,13 +924,11 @@ class GraphUI(ctk.CTkFrame):
         self._redraw_curves()
 
         self.canvas.draw_idle()
-        self._refresh_tick_labels()
 
 
-    def _refresh_tick_labels(self):
+    def _format_tick(self, value, position=None):
 
-        xlim = self.ax.get_xlim()
-        x_range = xlim[1] - xlim[0]
+        x_range = self.ax.get_xlim()[1] - self.ax.get_xlim()[0]
 
         if x_range < 0.1:
             decimals = 3
@@ -943,11 +939,7 @@ class GraphUI(ctk.CTkFrame):
         else:
             decimals = 0
 
-        x_labels = [f'{t:.{decimals}f}' if t != 0 else '' for t in self.ax.get_xticks()]
-        y_labels = [f'{t:.{decimals}f}' if t != 0 else '' for t in self.ax.get_yticks()]
-            
-        self.ax.set_xticklabels(x_labels)
-        self.ax.set_yticklabels(y_labels)
+        return f'{value:.{decimals}f}'
 
 
     def _handle_key_release(self, event=None):
