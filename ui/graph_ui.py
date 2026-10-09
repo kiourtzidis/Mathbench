@@ -928,6 +928,9 @@ class GraphUI(ctk.CTkFrame):
 
     def _format_tick(self, value, position=None):
 
+        if abs(value) < 1e-9:
+            return ''
+
         x_range = self.ax.get_xlim()[1] - self.ax.get_xlim()[0]
 
         if x_range < 0.1:
