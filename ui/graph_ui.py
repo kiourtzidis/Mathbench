@@ -606,7 +606,7 @@ class GraphUI(ctk.CTkFrame):
             return y_a - y_b
 
         roots = []
-        brackets = []
+        intervals = []
 
         finite_y = y[~np.isnan(y)]
         y_range = finite_y.max() - finite_y.min() if finite_y.size else 1.0
@@ -640,18 +640,18 @@ class GraphUI(ctk.CTkFrame):
                 if abs(edge_y) < root_tolerance * 0.01:
                     roots.append(edge_x)
                 elif edge_y * valid_y < 0:
-                    brackets.append((edge_x, edge_y, valid_x, valid_y))
+                    intervals.append((edge_x, edge_y, valid_x, valid_y))
 
             elif y1 == 0:
                 roots.append(x1)
 
             elif y1 * y2 < 0:
-                brackets.append((x1, y1, x2, y2))
+                intervals.append((x1, y1, x2, y2))
 
         if not np.isnan(y[-1]) and y[-1] == 0:
             roots.append(x[-1])
 
-        for x1, y1, x2, y2 in brackets:
+        for x1, y1, x2, y2 in intervals:
             start_size = min(abs(y1), abs(y2))
             mid_x = None
             mid_y = None
@@ -739,7 +739,8 @@ class GraphUI(ctk.CTkFrame):
         for intersection_x in intersection_xs:
             intersection_y = self.logic.evaluate_graph(intersection_x, tokens=tokens_a)
             if intersection_y is not None and not np.isnan(intersection_y):
-                intersections.append((intersection_x, round(intersection_y, 6)))
+                intersection_y = 0.0 if abs(intersection_y) < 1e-4 else round(intersection_y, 6)
+                intersections.append((intersection_x, intersection_y))
 
         return intersections
 
