@@ -112,6 +112,8 @@ class PowerNode(Node):
             result = self.left.evaluate(scope) ** self.right.evaluate(scope)
         except OverflowError:
             raise MathError('Result too large')
+        except ZeroDivisionError:
+            raise MathError('Division by zero')
 
         if isinstance(result, complex):
             raise MathError('Result is not a real number')

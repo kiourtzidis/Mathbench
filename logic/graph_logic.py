@@ -8,6 +8,7 @@ class GraphLogic(CalculatorLogic):
         super().__init__()
         self.angle_mode = 'RAD'
 
+
     def evaluate_graph(self, x, tokens=None):
         try:
             parser = Parser(self._expand_tokens(tokens if tokens is not None else self.tokens))
@@ -15,7 +16,7 @@ class GraphLogic(CalculatorLogic):
             ast = parser.parse()
             scope = {
                   **self.function_library,
-                  'x': x
+                  'x': float(x)
             }
             return ast.evaluate(scope)
 

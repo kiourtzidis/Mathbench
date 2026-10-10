@@ -593,32 +593,66 @@ class GraphUI(ctk.CTkFrame):
     def _find_roots(self, x, y, tokens_a, tokens_b=None):
 
         def evaluate(xi):
+
             if tokens_b is None:
                 return self.logic.evaluate_graph(xi, tokens=tokens_a)
+
             y_a = self.logic.evaluate_graph(xi, tokens=tokens_a)
             y_b = self.logic.evaluate_graph(xi, tokens=tokens_b)
+
             if y_a is None or y_b is None:
                 return None
+
             return y_a - y_b
 
         roots = []
+        brackets = []
+
         finite_y = y[~np.isnan(y)]
         y_range = finite_y.max() - finite_y.min() if finite_y.size else 1.0
         root_tolerance = max(y_range * 0.05, 1e-6)
 
         for i in range(len(y) - 1):
-            y1, y2 = y[i], y[i+1]
-            x1, x2 = x[i], x[i+1]
+            y1, y2 = y[i], y[i + 1]
+            x1, x2 = x[i], x[i + 1]
+
+            if np.isnan(y1) and np.isnan(y2):
+                continue
 
             if np.isnan(y1) or np.isnan(y2):
-                continue
 
-            if not (y1 == 0 or y1 * y2 < 0):
-                continue
+                sample_x, sample_y, bad_x = (x2, y2, x1) if np.isnan(y1) else (x1, y1, x2)
 
-            if abs(y1) > root_tolerance and abs(y2) > root_tolerance:
-                continue
+                edge_x = sample_x
+                for _ in range(50):
+                    mid_x = (edge_x + bad_x) / 2
+                    mid_y = evaluate(mid_x)
 
+                    if mid_y is None or np.isnan(mid_y):
+                        bad_x = mid_x
+                    else:
+                        edge_x = mid_x
+
+                edge_y = evaluate(edge_x)
+                if edge_y is None or np.isnan(edge_y):
+                    continue
+
+                if abs(edge_y) < root_tolerance * 0.01:
+                    roots.append(edge_x)
+                elif edge_y * sample_y < 0:
+                    brackets.append((edge_x, edge_y, sample_x, sample_y))
+
+            elif y1 == 0:
+                roots.append(x1)
+
+            elif y1 * y2 < 0:
+                brackets.append((x1, y1, x2, y2))
+
+        if not np.isnan(y[-1]) and y[-1] == 0:
+            roots.append(x[-1])
+
+        for x1, y1, x2, y2 in brackets:
+            start_size = min(abs(y1), abs(y2))
             mid_x = None
             mid_y = None
 
@@ -638,8 +672,8 @@ class GraphUI(ctk.CTkFrame):
                 else:
                     x1, y1 = mid_x, mid_y
 
-            if mid_x is not None and mid_y is not None and abs(mid_y) < 1e-6:
-                roots.append(0.0 if abs(mid_x) < 1e-4 else round(mid_x, 6))
+            if mid_x is not None and abs(mid_y) < max(0.5 * start_size, 1e-9):
+                roots.append(mid_x)
 
         for i in range(1, len(y) - 1):
             y0, y1, y2 = y[i - 1], y[i], y[i + 1]
@@ -677,11 +711,16 @@ class GraphUI(ctk.CTkFrame):
                     x0, x1 = x1, mid_right
 
             if abs(best_y) < 1e-6:
-                already_found = any(abs(root - best_x) < 1e-3 for root in roots)
-                if not already_found:
-                    roots.append(0.0 if abs(best_x) < 1e-4 else round(best_x, 6))
+                if not any(abs(root - best_x) < 1e-3 for root in roots):
+                    roots.append(best_x)
 
-        return roots
+        unique_roots = []
+        for root in sorted(roots):
+            root = 0.0 if abs(root) < 1e-4 else round(float(root), 6)
+            if not unique_roots or abs(root - unique_roots[-1]) > 1e-6:
+                unique_roots.append(root)
+
+        return unique_roots
 
 
     def _find_intersections(self, x, tokens_a, tokens_b):
@@ -718,6 +757,7 @@ class GraphUI(ctk.CTkFrame):
             x_data, y_data = plotted_function['line'].get_data()
 
             distances = np.hypot(x_data - click_x, y_data - click_y)
+
             index = np.argmin(distances)
             distance = distances[index]
 
