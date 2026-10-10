@@ -40,13 +40,13 @@ def factorize(number):
         return None
     elif number == 1:
         return 1
-        
+   
     if isinstance(number, float):
         if number.is_integer():
             number = int(number)
         else:
             return None
-          
+  
     if number < 0:
         number = abs(number)
 
@@ -64,8 +64,8 @@ def factorize(number):
 
 
 def cbrt(x):
-    return _clean(x ** (1/3))
-  
+    return _clean(math.cbrt(x))
+
 
 def sin(x, angle_mode):
     if angle_mode == 'DEG':
@@ -77,7 +77,7 @@ def cos(x, angle_mode):
     if angle_mode == 'DEG':
         x = math.radians(x)
     return _clean(math.cos(x))
-  
+
 
 def tan(x, angle_mode):
     if angle_mode == 'DEG':
