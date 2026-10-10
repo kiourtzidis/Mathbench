@@ -613,23 +613,23 @@ class GraphUI(ctk.CTkFrame):
         root_tolerance = max(y_range * 0.05, 1e-6)
 
         for i in range(len(y) - 1):
-            y1, y2 = y[i], y[i + 1]
-            x1, x2 = x[i], x[i + 1]
+            y1, y2 = y[i], y[i+1]
+            x1, x2 = x[i], x[i+1]
 
             if np.isnan(y1) and np.isnan(y2):
                 continue
 
-            if np.isnan(y1) or np.isnan(y2):
+            elif np.isnan(y1) or np.isnan(y2):
 
-                sample_x, sample_y, bad_x = (x2, y2, x1) if np.isnan(y1) else (x1, y1, x2)
+                valid_x, valid_y, invalid_x = (x2, y2, x1) if np.isnan(y1) else (x1, y1, x2)
 
-                edge_x = sample_x
+                edge_x = valid_x
                 for _ in range(50):
-                    mid_x = (edge_x + bad_x) / 2
+                    mid_x = (edge_x + invalid_x) / 2
                     mid_y = evaluate(mid_x)
 
                     if mid_y is None or np.isnan(mid_y):
-                        bad_x = mid_x
+                        invalid_x = mid_x
                     else:
                         edge_x = mid_x
 
@@ -639,8 +639,8 @@ class GraphUI(ctk.CTkFrame):
 
                 if abs(edge_y) < root_tolerance * 0.01:
                     roots.append(edge_x)
-                elif edge_y * sample_y < 0:
-                    brackets.append((edge_x, edge_y, sample_x, sample_y))
+                elif edge_y * valid_y < 0:
+                    brackets.append((edge_x, edge_y, valid_x, valid_y))
 
             elif y1 == 0:
                 roots.append(x1)
@@ -676,7 +676,7 @@ class GraphUI(ctk.CTkFrame):
                 roots.append(mid_x)
 
         for i in range(1, len(y) - 1):
-            y0, y1, y2 = y[i - 1], y[i], y[i + 1]
+            y0, y1, y2 = y[i-1], y[i], y[i+1]
 
             if np.isnan(y0) or np.isnan(y1) or np.isnan(y2):
                 continue
@@ -688,7 +688,7 @@ class GraphUI(ctk.CTkFrame):
             if not is_local_extreme:
                 continue
 
-            x0, x1, x2 = x[i - 1], x[i], x[i + 1]
+            x0, x1, x2 = x[i-1], x[i], x[i+1]
 
             best_x, best_y = x1, y1
             for _ in range(15):
@@ -737,9 +737,9 @@ class GraphUI(ctk.CTkFrame):
 
         intersections = []
         for intersection_x in intersection_xs:
-            iy = self.logic.evaluate_graph(intersection_x, tokens=tokens_a)
-            if iy is not None and not np.isnan(iy):
-                intersections.append((intersection_x, round(iy, 6)))
+            intersection_y = self.logic.evaluate_graph(intersection_x, tokens=tokens_a)
+            if intersection_y is not None and not np.isnan(intersection_y):
+                intersections.append((intersection_x, round(intersection_y, 6)))
 
         return intersections
 
@@ -757,6 +757,7 @@ class GraphUI(ctk.CTkFrame):
             x_data, y_data = plotted_function['line'].get_data()
 
             distances = np.hypot(x_data - click_x, y_data - click_y)
+            distances = np.where(np.isnan(distances), np.inf, distances)
 
             index = np.argmin(distances)
             distance = distances[index]
