@@ -822,7 +822,9 @@ class GraphUI(ctk.CTkFrame):
                 root_label = self.ax.annotate(
                     f'({point_x:.3g}, {point_y:.3g})',
                     xy=(point_x, point_y),
-                    xytext=(8, 8),
+                    xytext=(-8, 6),
+                    ha='right',
+                    va='bottom',
                     textcoords='offset points',
                     color='#FFFFFF',
                     fontsize=9,
@@ -832,7 +834,8 @@ class GraphUI(ctk.CTkFrame):
                         fc='#2E2E2E',
                         ec='#555555',
                         lw=0.5
-                    )
+                    ),
+                    zorder=6
                 )
                 self.root_markers.append((root_marker, root_label))
                 closest_index = len(self.root_markers) - 1
@@ -884,7 +887,9 @@ class GraphUI(ctk.CTkFrame):
         self.point_label = self.ax.annotate(
             f'({x:.3g}, {y:.3g})',
             xy=(x, y),
-            xytext=(8, 8),
+            xytext=(-8, 6),
+            ha='right',
+            va='bottom',
             textcoords='offset points',
             color='#FFFFFF',
             fontsize=9,
@@ -894,7 +899,8 @@ class GraphUI(ctk.CTkFrame):
                 fc='#2E2E2E',
                 ec='#555555',
                 lw=0.5
-            )
+            ),
+            zorder=6
         )
 
         self.canvas.draw_idle()
