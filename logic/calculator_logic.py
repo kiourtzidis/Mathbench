@@ -186,7 +186,7 @@ class CalculatorLogic:
 
         if not self.tokens:
             return
-        
+
         for i in reversed(range(len(self.tokens))):
             token = self.tokens[i]
             if i > 0 and token.eval_value in ('+', '-'):
@@ -235,7 +235,7 @@ class CalculatorLogic:
 
 
     def _resolve_input(self, symbol):
-        
+
         tokens = self.tokens
         last = tokens[-1] if tokens else None
 
@@ -246,7 +246,7 @@ class CalculatorLogic:
 
         if not tokens and symbol == '-':
             return '-'
-        
+
         if not tokens and incoming_token and incoming_token.is_infix_operator():
             return None
 
@@ -263,9 +263,23 @@ class CalculatorLogic:
 
         if last and last.is_infix_operator() and incoming_token and incoming_token.is_infix_operator():
             return None
-        
+
         if incoming_token and incoming_token.is_function():
             return symbol + '('
+
+        if (
+            incoming_token
+            and incoming_token.key in ('10ˣ', '2ˣ', 'eˣ')
+            and last
+            and (
+                last.is_value()
+                or last.is_variable()
+                or last.is_right_parenthesis()
+                or last.is_postfix_operator()
+                or last.is_special()
+            )
+        ):
+            return '×' + symbol
 
         if incoming_token and incoming_token.is_postfix_operator() and (last and last.eval_value in ('%', '‰') or not last.is_value()):
             return None
@@ -275,7 +289,7 @@ class CalculatorLogic:
                 return '×' + symbol
 
         return symbol
-    
+
 
     def _expand_tokens(self, tokens):
         result = []
