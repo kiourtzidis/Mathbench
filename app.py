@@ -30,8 +30,9 @@ BINDINGS = {
         ('Ctrl+Backspace', 'Clear entry'),
         ('Ctrl+L', 'Clear functions'),
         ('Ctrl+R', 'Recenter view'),
-        ('Ctrl+I', 'Show intercepts'),
-        ('Ctrl+J', 'Show intersections'),
+        ('Ctrl+X', 'Show x-intercepts'),
+        ('Ctrl+Y', 'Show y-intercepts'),
+        ('Ctrl+I', 'Show intersections'),
         ('Ctrl+Equal / Ctrl+Plus', 'Zoom in'),
         ('Ctrl+Minus', 'Zoom out')
     ),

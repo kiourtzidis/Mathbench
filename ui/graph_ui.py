@@ -13,7 +13,7 @@ class GraphUI(ctk.CTkFrame):
         super().__init__(parent, fg_color='#1F1F1F', corner_radius=0)
 
         self.width = 670
-        self.height = 620
+        self.height = 630
         self.logic = logic
 
         self.secondary_buttons = {}
@@ -21,7 +21,8 @@ class GraphUI(ctk.CTkFrame):
         self.current_points = []
 
         self.toggle_state = False
-        self.intercepts_visible = False
+        self.x_intercepts_visible = False
+        self.y_intercepts_visible = False
         self.intersections_visible = False
 
         self.point_marker = None
@@ -52,11 +53,12 @@ class GraphUI(ctk.CTkFrame):
             ('<Control-equal>', lambda: self.zoom(0.9)),
             ('<Control-plus>', lambda: self.zoom(0.9)),
             ('<Control-minus>', lambda: self.zoom(1.1)),
-            ('<Control-i>', self.toggle_intercepts),
-            ('<Control-j>', self.toggle_intersections),
+            ('<Control-x>', self.toggle_x_intercepts),
+            ('<Control-y>', self.toggle_y_intercepts),
+            ('<Control-i>', self.toggle_intersections),
             ('<Control-l>', self.clear_functions),
         )
-        
+
         for sequence, action in graph_bindings:
             self.winfo_toplevel().bind(
                 sequence,
@@ -77,7 +79,7 @@ class GraphUI(ctk.CTkFrame):
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas_frame)
         self.canvas.draw()
-        self.canvas.get_tk_widget().pack(fill='both', expand=True)
+        self.canvas.get_tk_widget().pack(fill='both', expand=True, pady=(10, 0))
 
         self.recenter_button = ctk.CTkButton(
             self.canvas_frame,
@@ -146,33 +148,48 @@ class GraphUI(ctk.CTkFrame):
         )
         self.vertical_separator_1.place(relx=0.0, rely=0.0, anchor='nw', x=82, y=5)
 
-        self.toggle_intercepts_button = ctk.CTkButton(
+        self.toggle_x_intercepts_button = ctk.CTkButton(
             self.canvas_frame,
-            text='☉',
+            text='x₀',
             font=('Jetbrains Mono', 16),
             width=18,
             height=18,
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
-            command=self.toggle_intercepts
+            command=self.toggle_x_intercepts
         )
-        self.toggle_intercepts_button.place(relx=0.0, rely=0.0, anchor='nw', x=83, y=7)
+        self.toggle_x_intercepts_button.place(relx=0.0, rely=0.0, anchor='nw', x=84, y=5)
 
-        self.toggle_intercepts_button.configure(cursor='hand2')
+        self.toggle_x_intercepts_button.configure(cursor='hand2')
+
+        self.toggle_y_intercepts_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='y₀',
+            font=('Jetbrains Mono', 16),
+            width=30,
+            height=24,
+            text_color='#BBBBBB',
+            fg_color='#2E2E2E',
+            hover_color='#2E2E2E',
+            command=self.toggle_y_intercepts
+        )
+        self.toggle_y_intercepts_button.place(relx=0.0, rely=0.0, anchor='nw', x=108, y=5)
+
+        self.toggle_y_intercepts_button.configure(cursor='hand2')
 
         self.toggle_intersections_button = ctk.CTkButton(
             self.canvas_frame,
             text='∩',
-            font=('Jetbrains Mono', 18),
-            width=18,
+            font=('Jetbrains Mono', 20),
+            width=24,
             height=18,
             text_color='#BBBBBB',
             fg_color='#2E2E2E',
             hover_color='#2E2E2E',
             command=self.toggle_intersections
         )
-        self.toggle_intersections_button.place(relx=0.0, rely=0.0, anchor='nw', x=108, y=3)
+        self.toggle_intersections_button.place(relx=0.0, rely=0.0, anchor='nw', x=132, y=2)
         
         self.toggle_intersections_button.configure(cursor='hand2')
 
@@ -464,13 +481,24 @@ class GraphUI(ctk.CTkFrame):
             button.configure(text=new_button)
 
 
-    def toggle_intercepts(self):
+    def toggle_x_intercepts(self):
 
-        self.intercepts_visible = not self.intercepts_visible
+        self.x_intercepts_visible = not self.x_intercepts_visible
 
-        self.toggle_intercepts_button.configure(
-            text_color='#FFFFFF' if self.intercepts_visible else '#BBBBBB'
-            )
+        self.toggle_x_intercepts_button.configure(
+            text_color='#FFFFFF' if self.x_intercepts_visible else '#BBBBBB'
+        )
+        self._show_points(self.current_points)
+
+
+    def toggle_y_intercepts(self):
+
+        self.y_intercepts_visible = not self.y_intercepts_visible
+
+        self.toggle_y_intercepts_button.configure(
+            text_color='#FFFFFF' if self.y_intercepts_visible else '#BBBBBB'
+        )
+
         self._show_points(self.current_points)
 
 
@@ -574,11 +602,11 @@ class GraphUI(ctk.CTkFrame):
                 plotted_function['line'].set_data(x, y)
 
                 roots = self._find_roots(x, y, plotted_function['tokens'])
-                self.current_points.extend((root_x, 0.0, 'intercept') for root_x in roots)
+                self.current_points.extend((root_x, 0.0, 'x_intercept') for root_x in roots)
 
                 y_intercept = self.logic.evaluate_graph(0, tokens=plotted_function['tokens'])
                 if y_intercept is not None and not np.isnan(y_intercept):
-                    self.current_points.append((0.0, round(y_intercept, 6), 'intercept'))
+                    self.current_points.append((0.0, round(y_intercept, 6), 'y_intercept'))
 
             for function_a, function_b in combinations(self.plotted_functions, 2):
                 for px, py in self._find_intersections(x, function_a['tokens'], function_b['tokens']):
@@ -782,8 +810,10 @@ class GraphUI(ctk.CTkFrame):
             self.root_markers = []
 
         visible_kinds = set()
-        if self.intercepts_visible:
-            visible_kinds.add('intercept')
+        if self.x_intercepts_visible:
+            visible_kinds.add('x_intercept')
+        if self.y_intercepts_visible:
+            visible_kinds.add('y_intercept')
         if self.intersections_visible:
             visible_kinds.add('intersection')
 
