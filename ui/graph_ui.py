@@ -488,6 +488,7 @@ class GraphUI(ctk.CTkFrame):
         self.toggle_x_intercepts_button.configure(
             text_color='#FFFFFF' if self.x_intercepts_visible else '#BBBBBB'
         )
+
         self._show_points(self.current_points)
 
 
@@ -665,7 +666,7 @@ class GraphUI(ctk.CTkFrame):
                 if edge_y is None or np.isnan(edge_y):
                     continue
 
-                if abs(edge_y) < root_tolerance * 0.01:
+                if abs(edge_y) < max(1e-3 * abs(valid_y), 1e-6):
                     roots.append(edge_x)
                 elif edge_y * valid_y < 0:
                     intervals.append((edge_x, edge_y, valid_x, valid_y))
@@ -700,7 +701,7 @@ class GraphUI(ctk.CTkFrame):
                 else:
                     x1, y1 = mid_x, mid_y
 
-            if mid_x is not None and abs(mid_y) < max(0.5 * start_size, 1e-9):
+            if mid_x is not None and abs(mid_y) < max(root_tolerance * 0.05, 1e-6):
                 roots.append(mid_x)
 
         for i in range(1, len(y) - 1):
@@ -744,8 +745,8 @@ class GraphUI(ctk.CTkFrame):
 
         unique_roots = []
         for root in sorted(roots):
-            root = 0.0 if abs(root) < 1e-4 else round(float(root), 6)
-            if not unique_roots or abs(root - unique_roots[-1]) > 1e-6:
+            root = 0.0 if abs(root) < 1e-9 else round(float(root), 6)
+            if not unique_roots or abs(root - unique_roots[-1]) > 1e-4:
                 unique_roots.append(root)
 
         return unique_roots
