@@ -818,14 +818,28 @@ class GraphUI(ctk.CTkFrame):
         if self.intersections_visible:
             visible_kinds.add('intersection')
 
-        points = [(px, py) for px, py, kind in points if kind in visible_kinds]
+        filtered_points = []
+        seen_coords = set()
+        for point_x, point_y, kind in points:
+            if kind in visible_kinds:
+                coord = (round(point_x, 5), round(point_y, 5))
+                if coord not in seen_coords:
+                    seen_coords.add(coord)
+                    filtered_points.append((point_x, point_y))
+        points = filtered_points
 
         xlim = self.ax.get_xlim()
         x_range = xlim[1] - xlim[0]
         match_tolerance = max(x_range * 0.01, 1e-3)
         matched_markers = set()
+        placed_labels = []
 
         for point_x, point_y in points:
+            label_offset, horizontal_alignment, vertical_alignment = self._pick_label_offset(
+                point_x, point_y, points, placed_labels
+            )
+            placed_labels.append((point_x, point_y, label_offset))
+
             closest_index = None
             closest_distance = match_tolerance
 
@@ -853,9 +867,9 @@ class GraphUI(ctk.CTkFrame):
                 root_label = self.ax.annotate(
                     f'({point_x:.3g}, {point_y:.3g})',
                     xy=(point_x, point_y),
-                    xytext=(-8, 6),
-                    ha='right',
-                    va='bottom',
+                    xytext=label_offset,
+                    ha=horizontal_alignment,
+                    va=vertical_alignment,
                     textcoords='offset points',
                     color='#FFFFFF',
                     fontsize=9,
@@ -878,6 +892,9 @@ class GraphUI(ctk.CTkFrame):
 
             label.xy = (point_x, point_y)
             label.set_text(f'({point_x:.3g}, {point_y:.3g})')
+            label.xyann = label_offset
+            label.set_ha(horizontal_alignment)
+            label.set_va(vertical_alignment)
             label.set_visible(True)
 
             matched_markers.add(closest_index)
@@ -937,6 +954,63 @@ class GraphUI(ctk.CTkFrame):
         )
 
         self.canvas.draw_idle()
+
+
+    def _pick_label_offset(self, target_x, target_y, points, placed_labels=None):
+
+        offsets = (
+            ((-8, 6), 'right', 'bottom'),
+            ((8, 6), 'left', 'bottom'),
+            ((-8, -6), 'right', 'top'),
+            ((8, -6), 'left', 'top'),
+        )
+    
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+    
+        x_threshold = (xlim[1] - xlim[0]) * 0.15
+        y_threshold = (ylim[1] - ylim[0]) * 0.15
+    
+        best = offsets[0]
+        best_penalty = float('inf')
+    
+        for offset, horizontal_alignment, vertical_alignment in offsets:
+
+            offset_x, offset_y = offset
+            penalty = 0
+
+            for neighbor_x, neighbor_y in points:
+
+                if neighbor_x == target_x and neighbor_y == target_y:
+                    continue
+
+                if abs(neighbor_x - target_x) > x_threshold or abs(neighbor_y - target_y) > y_threshold:
+                    continue
+
+                if (neighbor_x < target_x and offset_x < 0) or (neighbor_x > target_x and offset_x > 0):
+                    penalty += 2
+
+                if (neighbor_y > target_y and offset_y > 0) or (neighbor_y < target_y and offset_y < 0):
+                    penalty += 2
+
+            if placed_labels:
+
+                for placed_x, placed_y, placed_offset in placed_labels:
+                    if abs(placed_x - target_x) > x_threshold or abs(placed_y - target_y) > y_threshold:
+                        continue
+
+                    placed_offset_x, placed_offset_y = placed_offset
+                    if (offset_y > 0 and placed_offset_y > 0) or (offset_y < 0 and placed_offset_y < 0):
+                        penalty += 3
+
+                    if (offset_x > 0 and placed_offset_x > 0) or (offset_x < 0 and placed_offset_x < 0):
+                        penalty += 1
+
+            if penalty < best_penalty:
+                best_penalty = penalty
+                best = (offset, horizontal_alignment, vertical_alignment)
+
+        return best
 
 
     def _on_pan_start(self, event):
