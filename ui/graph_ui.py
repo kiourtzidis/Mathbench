@@ -607,7 +607,8 @@ class GraphUI(ctk.CTkFrame):
 
                 y_intercept = self.logic.evaluate_graph(0, tokens=plotted_function['tokens'])
                 if y_intercept is not None and not np.isnan(y_intercept):
-                    self.current_points.append((0.0, round(y_intercept, 6), 'y_intercept'))
+                    y_intercept = 0.0 if abs(y_intercept) < 1e-9 else round(y_intercept, 6)
+                    self.current_points.append((0.0, y_intercept, 'y_intercept'))
 
             for function_a, function_b in combinations(self.plotted_functions, 2):
                 for px, py in self._find_intersections(x, function_a['tokens'], function_b['tokens']):
@@ -832,6 +833,9 @@ class GraphUI(ctk.CTkFrame):
         placed_labels = []
 
         for point_x, point_y in points:
+            display_x = 0.0 if abs(point_x) < 1e-9 else point_x
+            display_y = 0.0 if abs(point_y) < 1e-9 else point_y
+
             label_offset, horizontal_alignment, vertical_alignment = self._pick_label_offset(
                 point_x, point_y, points, placed_labels
             )
@@ -862,7 +866,7 @@ class GraphUI(ctk.CTkFrame):
                 )
 
                 root_label = self.ax.annotate(
-                    f'({point_x:.3g}, {point_y:.3g})',
+                    f'({display_x:.3g}, {display_y:.3g})',
                     xy=(point_x, point_y),
                     xytext=label_offset,
                     ha=horizontal_alignment,
@@ -888,7 +892,7 @@ class GraphUI(ctk.CTkFrame):
             marker.set_visible(True)
 
             label.xy = (point_x, point_y)
-            label.set_text(f'({point_x:.3g}, {point_y:.3g})')
+            label.set_text(f'({display_x:.3g}, {display_y:.3g})')
             label.xyann = label_offset
             label.set_ha(horizontal_alignment)
             label.set_va(vertical_alignment)
@@ -930,8 +934,11 @@ class GraphUI(ctk.CTkFrame):
             zorder=3
         )
 
+        display_x = 0.0 if abs(x) < 1e-9 else x
+        display_y = 0.0 if abs(y) < 1e-9 else y
+
         self.point_label = self.ax.annotate(
-            f'({x:.3g}, {y:.3g})',
+            f'({display_x:.3g}, {display_y:.3g})',
             xy=(x, y),
             xytext=(-8, 6),
             ha='right',
