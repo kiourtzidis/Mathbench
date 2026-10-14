@@ -818,15 +818,12 @@ class GraphUI(ctk.CTkFrame):
         if self.intersections_visible:
             visible_kinds.add('intersection')
 
-        filtered_points = []
-        seen_coords = set()
+        unique_points = []
         for point_x, point_y, kind in points:
             if kind in visible_kinds:
-                coord = (round(point_x, 5), round(point_y, 5))
-                if coord not in seen_coords:
-                    seen_coords.add(coord)
-                    filtered_points.append((point_x, point_y))
-        points = filtered_points
+                if not(any(abs(point_x - unique_x) < 1e-5 and abs(point_y - unique_y) < 1e-5 for unique_x, unique_y in unique_points)):
+                    unique_points.append((point_x, point_y))
+        points = unique_points
 
         xlim = self.ax.get_xlim()
         x_range = xlim[1] - xlim[0]
