@@ -220,7 +220,7 @@ class GraphUI(ctk.CTkFrame):
         self.info_button.bind('<Enter>', lambda e: self.info_button.configure(text_color='#FFFFFF'))
         self.info_button.bind('<Leave>', lambda e: self.info_button.configure(text_color='#BBBBBB'))
 
-        self.info_text = 'Warning: Displayed intercepts and intersections are numerical approximations.\nSome points may be missed or slightly offset.'
+        self.info_text = 'Note: Displayed intercepts and intersections are numerical approximations.\nSome points may be missed or slightly offset.'
         self.info_label = ctk.CTkLabel(
             self.canvas_frame,
             text=self.info_text,
@@ -920,7 +920,7 @@ class GraphUI(ctk.CTkFrame):
                     textcoords='offset points',
                     color='#FFFFFF',
                     fontsize=9,
-                    fontfamily='monospace',
+                    fontfamily='DejaVu Sans',
                     bbox=dict(
                         boxstyle='round,pad=0.3',
                         fc='#2E2E2E',
@@ -992,7 +992,7 @@ class GraphUI(ctk.CTkFrame):
             textcoords='offset points',
             color='#FFFFFF',
             fontsize=9,
-            fontfamily='monospace',
+            fontfamily='DejaVu Sans',
             bbox=dict(
                 boxstyle='round,pad=0.3',
                 fc='#2E2E2E',
