@@ -24,6 +24,7 @@ class GraphUI(ctk.CTkFrame):
         self.x_intercepts_visible = False
         self.y_intercepts_visible = False
         self.intersections_visible = False
+        self.info_visible = False
 
         self.point_marker = None
         self.point_label = None
@@ -201,6 +202,36 @@ class GraphUI(ctk.CTkFrame):
             text_color='#BBBBBB'
         )
         self.coords_label.place(relx=1.0, rely=0.0, anchor='ne', x=-5, y=5)
+
+        self.info_button = ctk.CTkButton(
+            self.canvas_frame,
+            text='ⓘ',
+            font=('Jetbrains Mono', 13),
+            width=20,
+            height=20,
+            text_color='#BBBBBB',
+            fg_color='#2E2E2E',
+            hover_color='#2E2E2E',
+            command=self.toggle_info
+        )
+        self.info_button.place(relx=0.0, rely=1.0, anchor='sw', x=5, y=-5)
+
+        self.info_button.configure(cursor='hand2')
+        self.info_button.bind('<Enter>', lambda e: self.info_button.configure(text_color='#FFFFFF'))
+        self.info_button.bind('<Leave>', lambda e: self.info_button.configure(text_color='#BBBBBB'))
+
+        self.info_text = 'Warning: Displayed intercepts and intersections are numerical approximations.\nSome points may be missed or slightly offset.'
+        self.info_label = ctk.CTkLabel(
+            self.canvas_frame,
+            text=self.info_text,
+            font=('Jetbrains Mono', 11),
+            text_color='#CCCCCC',
+            fg_color='#252525',
+            corner_radius=4,
+            padx=8,
+            pady=4,
+            justify='left'
+        )
 
         self.canvas.mpl_connect('motion_notify_event', self.on_hover)
         self.canvas.mpl_connect('scroll_event', self.on_scroll)
@@ -510,7 +541,22 @@ class GraphUI(ctk.CTkFrame):
         self.toggle_intersections_button.configure(
             text_color='#FFFFFF' if self.intersections_visible else '#BBBBBB'
             )
+
         self._show_points(self.current_points)
+
+
+    def toggle_info(self):
+
+        self.info_visible = not self.info_visible
+
+        if self.info_visible:
+            self.info_label.configure(text=self.info_text, fg_color='#252525')
+            self.info_label.place(relx=0.0, rely=1.0, anchor='sw', x=30, y=-5)
+            self.info_button.configure(text_color='#FFFFFF')
+        else:
+            self.info_label.configure(text='', fg_color='transparent')
+            self.info_label.place_forget()
+            self.info_button.configure(text_color='#BBBBBB')
 
 
     def on_hover(self, event):
@@ -702,7 +748,7 @@ class GraphUI(ctk.CTkFrame):
                 else:
                     x1, y1 = mid_x, mid_y
 
-            if mid_x is not None and abs(mid_y) < max(root_tolerance * 0.05, 1e-6):
+            if mid_x is not None and abs(mid_y) < min(max(root_tolerance * 0.05, 1e-6), 1e-4):
                 roots.append(mid_x)
 
         for i in range(1, len(y) - 1):
