@@ -160,7 +160,6 @@ class App:
             return
 
         popup = ctk.CTkToplevel(self.root, fg_color='#1F1F1F')
-
         popup.title('Keyboard Shortcuts')
 
         x = self.root.winfo_x() + (self.root.winfo_width() - 360) // 2
@@ -179,7 +178,8 @@ class App:
             scrollbar_button_color='#555555',
             scrollbar_button_hover_color='#666666'
         )
-        scroll.pack(fill='both', expand=True, padx=8, pady=8)
+        scroll.pack(fill='both', expand=True, padx=8, pady=(0, 8))
+
         scroll.grid_columnconfigure(0, weight=0)
         scroll.grid_columnconfigure(1, weight=1)
 
@@ -192,7 +192,11 @@ class App:
                 font=('Jetbrains Mono', 13, 'bold'),
                 text_color='#777777'
             )
-            header.grid(row=row, column=0, columnspan=2, sticky='w', pady=(10, 4))
+            header.grid(row=row, column=0, columnspan=2, sticky='w', pady=(8, 0))
+            row += 1
+
+            separator = ctk.CTkFrame(scroll, height=1, fg_color='#444444')
+            separator.grid(row=row, column=0, columnspan=2, sticky='ew', pady=(0, 4))
             row += 1
 
             for keys, description in bindings:
