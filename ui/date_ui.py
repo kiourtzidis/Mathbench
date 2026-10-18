@@ -9,8 +9,10 @@ class DateUI(ctk.CTkFrame):
         super().__init__(parent, fg_color='#2E2E2E')
 
         self.width = 600
-        self.height = 600
+        self.height = 560
         self.logic = logic
+
+        self.selected_dates = {}
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -38,8 +40,8 @@ class DateUI(ctk.CTkFrame):
         self.inputs_frame.grid_columnconfigure(0, weight=1)
         self.inputs_frame.grid_columnconfigure(1, weight=1)
 
-        self.from_entries = self._build_date_row(self.inputs_frame, 'From:', column=0)
-        self.to_entries = self._build_date_row(self.inputs_frame, 'To:', column=1)
+        self.from_entries = self._build_date_picker(self.inputs_frame, 'From:', column=0)
+        self.to_entries = self._build_date_picker(self.inputs_frame, 'To:', column=1)
 
         top_separator = ctk.CTkFrame(self.panel_frame, height=1, fg_color='#333333')
         top_separator.grid(row=1, column=0, sticky='ew', pady=3)
@@ -93,18 +95,76 @@ class DateUI(ctk.CTkFrame):
         self.years_label.grid(row=3, column=0, pady=1)
 
 
-    def _build_date_row(self, parent, label_text, column):
+    def _build_date_picker(self, parent, label_text, column):
 
         date_frame = ctk.CTkFrame(parent, fg_color='#292929', corner_radius=0)
         date_frame.grid(row=0, column=column, sticky='nsew', padx=8, pady=8)
 
+        fields_frame = ctk.CTkFrame(date_frame, fg_color='#292929', corner_radius=0)
+        fields_frame.pack()
+
         label = ctk.CTkLabel(
-            date_frame,
+            fields_frame,
             text=label_text, 
             font=('Jetbrains Mono', 12), 
             text_color='#777777'
         )
-        label.pack(anchor='w', padx=4, pady=(0, 4))
+        label.grid(row=0, column=0, padx=(0, 6))
+
+        day_entry = ctk.CTkEntry(
+            fields_frame, 
+            width=30, 
+            font=('Jetbrains Mono', 14),
+            fg_color='#292929',
+            border_width=1, 
+            border_color='#4A4A4A',
+            justify='center'
+        )
+        day_entry.grid(row=0, column=1, padx=2)
+
+        slash_label_1 = ctk.CTkLabel(
+            fields_frame,
+            text='/',
+            font=('Jetbrains Mono', 16),
+            text_color='#CCCCCC'
+        )
+        slash_label_1.grid(row=0, column=2, padx=2)
+
+        month_entry = ctk.CTkEntry(
+            fields_frame,
+            width=30, 
+            font=('Jetbrains Mono', 14),
+            fg_color='#292929', 
+            border_width=1, 
+            border_color='#4A4A4A',
+            justify='center'
+        )
+        month_entry.grid(row=0, column=3, padx=2)
+
+        slash_label_2 = ctk.CTkLabel(
+            fields_frame,
+            text='/',
+            font=('Jetbrains Mono', 16),
+            text_color='#CCCCCC'
+        )
+        slash_label_2.grid(row=0, column=4, padx=2)
+
+        year_entry = ctk.CTkEntry(
+            fields_frame, 
+            width=48, 
+            font=('Jetbrains Mono', 14),
+            fg_color='#292929', 
+            border_width=1, 
+            border_color='#4A4A4A',
+            justify='center'
+        )
+        year_entry.grid(row=0, column=5, padx=2)
+
+        entries = {
+            'day': day_entry, 
+            'month': month_entry, 
+            'year': year_entry
+        }
 
         calendar = CTkCalendar(
             date_frame,
@@ -118,60 +178,9 @@ class DateUI(ctk.CTkFrame):
             select_color='#E07B1A',
             font=('Jetbrains Mono', 12),
             corner_radius=6,
+            command=lambda picked: self._pick_date(entries, calendar, picked)
         )
         calendar.pack(pady=8)
-
-        fields_frame = ctk.CTkFrame(date_frame, fg_color='#292929', corner_radius=0)
-        fields_frame.pack()
-
-        day_entry = ctk.CTkEntry(
-            fields_frame, 
-            width=30, 
-            font=('Jetbrains Mono', 14),
-            fg_color='#292929',
-            border_width=1, 
-            border_color='#4A4A4A',
-            justify='center'
-        )
-        day_entry.grid(row=0, column=0, padx=2)
-
-        slash_label_1 = ctk.CTkLabel(
-            fields_frame,
-            text='/',
-            font=('Jetbrains Mono', 16),
-            text_color='#CCCCCC'
-        )
-        slash_label_1.grid(row=0, column=1, padx=2)
-
-        month_entry = ctk.CTkEntry(
-            fields_frame,
-            width=30, 
-            font=('Jetbrains Mono', 14),
-            fg_color='#292929', 
-            border_width=1, 
-            border_color='#4A4A4A',
-            justify='center'
-        )
-        month_entry.grid(row=0, column=2, padx=2)
-
-        slash_label_2 = ctk.CTkLabel(
-            fields_frame,
-            text='/',
-            font=('Jetbrains Mono', 16),
-            text_color='#CCCCCC'
-        )
-        slash_label_2.grid(row=0, column=3, padx=2)
-
-        year_entry = ctk.CTkEntry(
-            fields_frame, 
-            width=48, 
-            font=('Jetbrains Mono', 14),
-            fg_color='#292929', 
-            border_width=1, 
-            border_color='#4A4A4A',
-            justify='center'
-        )
-        year_entry.grid(row=0, column=4, padx=2)
 
         today = date.today()
         day_entry.insert(0, str(today.day))
@@ -181,11 +190,7 @@ class DateUI(ctk.CTkFrame):
         for entry in (day_entry, month_entry, year_entry):
             entry.bind('<KeyRelease>', self._calculate)
 
-        return {
-            'day': day_entry, 
-            'month': month_entry, 
-            'year': year_entry
-        }
+        return entries
 
 
     def _read_date(self, entries):
@@ -198,6 +203,31 @@ class DateUI(ctk.CTkFrame):
             return None
 
         return self.logic.validate_date(day, month, year)
+
+
+    def _pick_date(self, entries, calendar, picked):
+
+        day, month, year = picked
+
+        for key, value in (('day', day), ('month', month), ('year', year)):
+            entries[key].delete(0, 'end')
+            entries[key].insert(0, str(value))
+
+        self._select(calendar, picked)
+        self._calculate()
+
+
+    def _select(self, calendar, picked):
+
+        previous = self.selected_dates.get(calendar)
+
+        if previous is not None:
+            calendar.mark(previous)
+
+        calendar.mark(calendar.today, '#3C3C3C')
+        calendar.select(picked)
+
+        self.selected_dates[calendar] = picked
 
 
     def _calculate(self, event=None):
