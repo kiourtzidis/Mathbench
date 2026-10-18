@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from ctkdlib import CTkCalendar
 from datetime import date
 
 class DateUI(ctk.CTkFrame):
@@ -6,8 +7,9 @@ class DateUI(ctk.CTkFrame):
     def __init__(self, parent, logic):
 
         super().__init__(parent, fg_color='#2E2E2E')
-        self.width = 460
-        self.height = 310
+
+        self.width = 600
+        self.height = 600
         self.logic = logic
 
         self.grid_columnconfigure(0, weight=1)
@@ -102,7 +104,22 @@ class DateUI(ctk.CTkFrame):
             font=('Jetbrains Mono', 12), 
             text_color='#777777'
         )
-        label.pack(anchor='w', padx=38, pady=(0, 4))
+        label.pack(anchor='w', padx=4, pady=(0, 4))
+
+        calendar = CTkCalendar(
+            date_frame,
+            width=300,
+            height=270,
+            fg_color='#1F1F1F',
+            header_color='#2A2A2A',
+            header_text_color='#FFFFFF',
+            text_color='#DDDDDD',
+            hover_color='#3C3C3C',
+            select_color='#E07B1A',
+            font=('Jetbrains Mono', 12),
+            corner_radius=6,
+        )
+        calendar.pack(pady=8)
 
         fields_frame = ctk.CTkFrame(date_frame, fg_color='#292929', corner_radius=0)
         fields_frame.pack()
@@ -118,13 +135,13 @@ class DateUI(ctk.CTkFrame):
         )
         day_entry.grid(row=0, column=0, padx=2)
 
-        slash_label = ctk.CTkLabel(
+        slash_label_1 = ctk.CTkLabel(
             fields_frame,
             text='/',
             font=('Jetbrains Mono', 16),
             text_color='#CCCCCC'
         )
-        slash_label.grid(row=0, column=1, padx=2)
+        slash_label_1.grid(row=0, column=1, padx=2)
 
         month_entry = ctk.CTkEntry(
             fields_frame,
@@ -137,13 +154,13 @@ class DateUI(ctk.CTkFrame):
         )
         month_entry.grid(row=0, column=2, padx=2)
 
-        slash_label2 = ctk.CTkLabel(
+        slash_label_2 = ctk.CTkLabel(
             fields_frame,
             text='/',
             font=('Jetbrains Mono', 16),
             text_color='#CCCCCC'
         )
-        slash_label2.grid(row=0, column=3, padx=2)
+        slash_label_2.grid(row=0, column=3, padx=2)
 
         year_entry = ctk.CTkEntry(
             fields_frame, 
