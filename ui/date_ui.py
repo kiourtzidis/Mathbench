@@ -31,8 +31,8 @@ class DateUI(ctk.CTkFrame):
         self.inputs_frame.grid_columnconfigure(0, weight=1)
         self.inputs_frame.grid_columnconfigure(1, weight=1)
 
-        self.from_entries = self._build_date_picker(self.inputs_frame, 'From:', column=0)
-        self.to_entries = self._build_date_picker(self.inputs_frame, 'To:', column=1)
+        self.from_entries, self.from_calendar = self._build_date_picker(self.inputs_frame, 'From:', column=0)
+        self.to_entries, self.to_calendar = self._build_date_picker(self.inputs_frame, 'To:', column=1)
 
         self.summary_frame = ctk.CTkFrame(self, fg_color='#1F1F1F', corner_radius=0)
         self.summary_frame.grid(row=1, column=0, sticky='nsew', pady=(0, 16))
@@ -179,9 +179,9 @@ class DateUI(ctk.CTkFrame):
         year_entry.insert(0, str(today.year))
 
         for entry in (day_entry, month_entry, year_entry):
-            entry.bind('<KeyRelease>', self._calculate)
+            entry.bind('<KeyRelease>', self._handle_key_release)
 
-        return entries
+        return entries, calendar
 
 
     def _read_date(self, entries):
@@ -247,5 +247,22 @@ class DateUI(ctk.CTkFrame):
         )
 
         self.breakdown_label.configure(
-            text=f'{result['total_days']:,} days  ·  {result['total_months']:.2f} months  ·  {result['total_years']:.2f} years'
+            text=f'{result['total_days']:,} days  ·  ~{result['total_months']:.2f} months  ·  ~{result['total_years']:.2f} years'
         )
+
+
+    def _sync_calendar(self, entries, calendar):
+
+        if len(entries['year'].get()) != 4:
+            return
+
+        current = self._read_date(entries)
+
+        if current is not None:
+            self._select(calendar, (current.day, current.month, current.year))
+
+
+    def _handle_key_release(self, event=None):
+        self._calculate()
+        self._sync_calendar(self.from_entries, self.from_calendar)
+        self._sync_calendar(self.to_entries, self.to_calendar)
