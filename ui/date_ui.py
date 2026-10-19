@@ -9,13 +9,14 @@ class DateUI(ctk.CTkFrame):
         super().__init__(parent, fg_color='#2E2E2E')
 
         self.width = 600
-        self.height = 560
+        self.height = 500
         self.logic = logic
 
         self.selected_dates = {}
 
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=0)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
 
         self._build_panel()
 
@@ -24,17 +25,7 @@ class DateUI(ctk.CTkFrame):
 
     def _build_panel(self):
 
-        self.panel_frame = ctk.CTkFrame(self, fg_color='#292929', corner_radius=0)
-        self.panel_frame.grid(row=0, column=0, sticky='nsew')
-
-        self.panel_frame.grid_columnconfigure(0, weight=1)
-        self.panel_frame.grid_rowconfigure(0, weight=0)
-        self.panel_frame.grid_rowconfigure(1, weight=0)
-        self.panel_frame.grid_rowconfigure(2, weight=0)
-        self.panel_frame.grid_rowconfigure(3, weight=0)
-        self.panel_frame.grid_rowconfigure(4, weight=0)
-
-        self.inputs_frame = ctk.CTkFrame(self.panel_frame, fg_color='#292929', corner_radius=0)
+        self.inputs_frame = ctk.CTkFrame(self, fg_color='#2E2E2E', corner_radius=0)
         self.inputs_frame.grid(row=0, column=0, sticky='nsew')
 
         self.inputs_frame.grid_columnconfigure(0, weight=1)
@@ -43,64 +34,64 @@ class DateUI(ctk.CTkFrame):
         self.from_entries = self._build_date_picker(self.inputs_frame, 'From:', column=0)
         self.to_entries = self._build_date_picker(self.inputs_frame, 'To:', column=1)
 
-        top_separator = ctk.CTkFrame(self.panel_frame, height=1, fg_color='#333333')
-        top_separator.grid(row=1, column=0, sticky='ew', pady=3)
+        self.summary_frame = ctk.CTkFrame(self, fg_color='#1F1F1F', corner_radius=0)
+        self.summary_frame.grid(row=1, column=0, sticky='nsew', pady=(0, 16))
+
+        self.summary_frame.grid_columnconfigure(0, weight=0)
+        self.summary_frame.grid_columnconfigure(1, weight=1)
+        self.summary_frame.grid_columnconfigure(2, weight=0)
+
+        self.from_date_label = ctk.CTkLabel(
+            self.summary_frame,
+            text='',
+            width=100,
+            anchor='w',
+            font=('Jetbrains Mono', 13),
+            text_color='#AAAAAA'
+        )
+        self.from_date_label.grid(row=1, column=0, sticky='w', padx=(24, 6), pady=(14, 6))
+
+        self.track_label = ctk.CTkLabel(
+            self.summary_frame,
+            text='●' + '━' * 22 + '●',
+            font=('Jetbrains Mono', 13),
+            text_color='#888888'
+        )
+        self.track_label.grid(row=1, column=1, sticky='ew', padx=12, pady=(14, 6))
+
+        self.to_date_label = ctk.CTkLabel(
+            self.summary_frame,
+            text='',
+            width=100,
+            anchor='e',
+            font=('Jetbrains Mono', 13),
+            text_color='#AAAAAA'
+        )
+        self.to_date_label.grid(row=1, column=2, sticky='e', padx=(6, 24), pady=(14, 6))
 
         self.result_label = ctk.CTkLabel(
-            self.panel_frame, 
-            text='', 
-            font=('Jetbrains Mono', 22, 'bold'), 
+            self.summary_frame,
+            text='',
+            font=('Jetbrains Mono', 20, 'bold'),
             text_color='#FFFFFF'
         )
-        self.result_label.grid(row=2, column=0, pady=8)
+        self.result_label.grid(row=2, column=0, columnspan=3, pady=(4, 4))
 
-        bottom_separator = ctk.CTkFrame(self.panel_frame, height=1, fg_color='#333333')
-        bottom_separator.grid(row=3, column=0, sticky='ew', pady=3)
-
-        self.breakdown_frame = ctk.CTkFrame(self.panel_frame, fg_color='#292929', corner_radius=0)
-        self.breakdown_frame.grid(row=4, column=0, sticky='nsew', pady=(0, 16))
-
-        self.breakdown_frame.grid_columnconfigure(0, weight=1)
-
-        breakdown_header = ctk.CTkLabel(
-            self.breakdown_frame, 
-            text='Breakdown', 
-            font=('Jetbrains Mono', 12), 
-            text_color='#777777'
+        self.breakdown_label = ctk.CTkLabel(
+            self.summary_frame,
+            text='',
+            font=('Jetbrains Mono', 13),
+            text_color='#888888'
         )
-        breakdown_header.grid(row=0, column=0)
-
-        self.days_label = ctk.CTkLabel(
-            self.breakdown_frame, 
-            text='', 
-            font=('Jetbrains Mono', 14), 
-            text_color='#CCCCCC'
-        )
-        self.days_label.grid(row=1, column=0, pady=1)
-
-        self.months_label = ctk.CTkLabel(
-            self.breakdown_frame, 
-            text='', 
-            font=('Jetbrains Mono', 14), 
-            text_color='#CCCCCC'
-        )
-        self.months_label.grid(row=2, column=0, pady=1)
-
-        self.years_label = ctk.CTkLabel(
-            self.breakdown_frame, 
-            text='', 
-            font=('Jetbrains Mono', 14), 
-            text_color='#CCCCCC'
-        )
-        self.years_label.grid(row=3, column=0, pady=1)
+        self.breakdown_label.grid(row=3, column=0, columnspan=3, pady=(0, 10))
 
 
     def _build_date_picker(self, parent, label_text, column):
 
-        date_frame = ctk.CTkFrame(parent, fg_color='#292929', corner_radius=0)
+        date_frame = ctk.CTkFrame(parent, fg_color='#2E2E2E', corner_radius=0)
         date_frame.grid(row=0, column=column, sticky='nsew', padx=8, pady=8)
 
-        fields_frame = ctk.CTkFrame(date_frame, fg_color='#292929', corner_radius=0)
+        fields_frame = ctk.CTkFrame(date_frame, fg_color='#2E2E2E', corner_radius=0)
         fields_frame.pack()
 
         label = ctk.CTkLabel(
@@ -236,17 +227,25 @@ class DateUI(ctk.CTkFrame):
         to_date = self._read_date(self.to_entries)
 
         if from_date is None or to_date is None:
+            self.from_date_label.configure(text='')
+            self.to_date_label.configure(text='')
+            self.track_label.configure(text='')
             self.result_label.configure(text='Invalid date')
-            self.days_label.configure(text='')
-            self.months_label.configure(text='')
-            self.years_label.configure(text='')
+            self.breakdown_label.configure(text='')
             return
+
+        start_date, end_date = (from_date, to_date) if from_date <= to_date else (to_date, from_date)
+
+        self.from_date_label.configure(text=start_date.strftime('%a %-d %b %Y'))
+        self.to_date_label.configure(text=end_date.strftime('%a %-d %b %Y'))
+        self.track_label.configure(text='●' + '━' * 22 + '●')
 
         result = self.logic.calculate_difference(from_date, to_date)
 
         self.result_label.configure(
             text=f'{result['years']} Years, {result['months']} Months, {result['days']} Days'
         )
-        self.days_label.configure(text=f'Days:   {result['total_days']}')
-        self.months_label.configure(text=f'Months: {result['total_months']:.2f}')
-        self.years_label.configure(text=f'Years:  {result['total_years']:.2f}')
+
+        self.breakdown_label.configure(
+            text=f'{result['total_days']:,} days  ·  {result['total_months']:.2f} months  ·  {result['total_years']:.2f} years'
+        )
