@@ -173,6 +173,8 @@ class DateUI(ctk.CTkFrame):
         )
         calendar.pack(pady=8)
 
+        self._add_year_buttons(calendar)
+
         today = date.today()
         day_entry.insert(0, str(today.day))
         month_entry.insert(0, str(today.month))
@@ -182,6 +184,22 @@ class DateUI(ctk.CTkFrame):
             entry.bind('<KeyRelease>', self._handle_key_release)
 
         return entries, calendar
+
+
+    def _add_year_buttons(self, calendar):
+
+        for text, side, step, neighbor in (('«', 'left', -1, calendar.left), ('»', 'right', 1, calendar.right)):
+            year_button = ctk.CTkButton(
+                calendar.header_frame,
+                text=text,
+                width=25,
+                fg_color='transparent',
+                hover=False,
+                font=('Jetbrains Mono', 18),
+                text_color='#FFFFFF',
+                command=lambda s=step: self._jump_years(calendar, s)
+            )
+            year_button.pack(side=side, before=neighbor, pady=(0, 3))
 
 
     def _read_date(self, entries):
@@ -249,6 +267,12 @@ class DateUI(ctk.CTkFrame):
         self.breakdown_label.configure(
             text=f'{result['total_days']:,} days  ·  ~{result['total_months']:.2f} months  ·  ~{result['total_years']:.2f} years'
         )
+
+
+    def _jump_years(self, calendar, step):
+        calendar.year = max(1, min(9999, calendar.year + step))
+        calendar.year_label.set(calendar.year)
+        calendar.create_calendar_frame()
 
 
     def _sync_calendar(self, entries, calendar):
