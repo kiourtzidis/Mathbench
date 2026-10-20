@@ -161,13 +161,13 @@ class DateUI(ctk.CTkFrame):
             date_frame,
             width=300,
             height=270,
+            font=('Jetbrains Mono', 12),
             fg_color='#1F1F1F',
             header_color='#2A2A2A',
             header_text_color='#FFFFFF',
             text_color='#DDDDDD',
             hover_color='#3C3C3C',
             select_color='#E07B1A',
-            font=('Jetbrains Mono', 12),
             corner_radius=6,
             command=lambda picked: self._pick_date(entries, calendar, picked)
         )
@@ -254,8 +254,12 @@ class DateUI(ctk.CTkFrame):
 
         start_date, end_date = (from_date, to_date) if from_date <= to_date else (to_date, from_date)
 
-        self.from_date_label.configure(text=start_date.strftime('%a %-d %b %Y'))
-        self.to_date_label.configure(text=end_date.strftime('%a %-d %b %Y'))
+        self.from_date_label.configure(
+            text=f'{start_date.strftime('%a')} {start_date.day} {start_date.strftime('%b %Y')}'
+        )
+        self.to_date_label.configure(
+            text=f'{end_date.strftime('%a')} {end_date.day} {end_date.strftime('%b %Y')}'
+        )
         self.track_label.configure(text='●' + '━' * 22 + '●')
 
         result = self.logic.calculate_difference(from_date, to_date)
