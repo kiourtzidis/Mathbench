@@ -286,6 +286,7 @@ class ScientificUI(CalculatorUI):
             button.pack(fill='x')
 
         self._update_fx_hover()
+        self.fx_button.configure(text='f(x) ▴')
 
 
     def _close_fx_menu(self):
@@ -293,6 +294,8 @@ class ScientificUI(CalculatorUI):
             self.fx_menu.destroy()
             self.fx_menu = None
             self.fx_scroll = None
+
+        self.fx_button.configure(text='f(x) ▾')
 
 
     def _update_fx_hover(self):
