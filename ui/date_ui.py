@@ -151,6 +151,21 @@ class DateUI(ctk.CTkFrame):
         )
         year_entry.grid(row=0, column=5, padx=2)
 
+        today_button = ctk.CTkButton(
+            fields_frame,
+            text='↻',
+            width=24,
+            height=28,
+            font=('Jetbrains Mono', 12),
+            text_color='#FFFFFF',
+            fg_color='#242424',
+            hover_color='#2D2D2D',
+            border_width=1,
+            border_color='#4A4A4A',
+            command=lambda: self._set_today(entries, calendar)
+        )
+        today_button.grid(row=0, column=6, padx=(4, 0))
+
         entries = {
             'day': day_entry, 
             'month': month_entry, 
@@ -222,6 +237,20 @@ class DateUI(ctk.CTkFrame):
             entries[key].delete(0, 'end')
             entries[key].insert(0, str(value))
 
+        self._select(calendar, picked)
+        self._calculate()
+
+
+    def _set_today(self, entries, calendar):
+
+        today = date.today()
+        picked = (today.day, today.month, today.year)
+
+        for key, value in zip(('day', 'month', 'year'), picked):
+            entries[key].delete(0, 'end')
+            entries[key].insert(0, str(value))
+
+        calendar.today = picked
         self._select(calendar, picked)
         self._calculate()
 
