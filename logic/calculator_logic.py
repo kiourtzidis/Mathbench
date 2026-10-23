@@ -5,10 +5,10 @@ from core.lexer import Lexer
 from core.parser import Parser
 from core.exceptions import SyntaxError, MathError
 
-ANGLE_DEPENDENT_FUNCTIONS = frozenset({
+ANGLE_DEPENDENT_FUNCTIONS = (
     'sin', 'cos', 'tan', 'csc', 'sec', 'cot', 
     'arcsin', 'arccos', 'arctan', 'arccsc', 'arcsec', 'arccot'
-    })
+    )
 
 class CalculatorLogic:
 
