@@ -138,7 +138,7 @@ class CalculatorLogic:
                 'Ans': self.last_result
             }
             result = ast.evaluate(scope)
-            result = self._clean_result(result)
+            result = math_functions.clean(result)
 
             if result < 0:
                 positive_result = -result
@@ -305,15 +305,3 @@ class CalculatorLogic:
     def _update_expressions_from_tokens(self):
         self.raw_input = ''.join(token.key for token in self.tokens)
         self.display_expression = ''.join(token.display_value for token in self.tokens)
-
-
-    def _clean_result(self, result):
-        if isinstance(result, float):
-            if abs(result) < 1e-10:
-                return 0
-            if abs(result - round(result)) < 1e-10:
-                return int(round(result))
-            if result.is_integer():
-                return int(result)
-            return round(result, 12)
-        return result
