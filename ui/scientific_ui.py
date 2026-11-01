@@ -25,6 +25,8 @@ class ScientificUI(CalculatorUI):
         self.winfo_toplevel().bind('<Button-1>', self._handle_toplevel_outside_click, add='+')
         self.winfo_toplevel().bind('<Control-Shift-D>', self._handle_angle_shortcut, add='+')
         self.winfo_toplevel().bind('<Escape>', self._handle_escape, add='+')
+        self.winfo_toplevel().bind('<Configure>', self._handle_toplevel_configure, add='+')
+
         self.bind('<Unmap>', lambda e: self._close_fx_menu())
 
 
@@ -244,14 +246,15 @@ class ScientificUI(CalculatorUI):
 
 
     def _insert_function(self, function):
-            self.handle_symbol(function)
-            self._close_fx_menu()
+        self.handle_symbol(function)
+        self._close_fx_menu()
 
 
     def _open_fx_menu(self):
 
         self.fx_menu = ctk.CTkToplevel(self)
         self.fx_menu.overrideredirect(True)
+        self.fx_menu.transient(self.winfo_toplevel())
 
         button_x = self.fx_button.winfo_rootx()
         button_y = self.fx_button.winfo_rooty()
@@ -313,7 +316,9 @@ class ScientificUI(CalculatorUI):
                 button_height = button.winfo_height()
 
                 inside = (button_x <= mouse_x < button_x + button_width and button_y <= mouse_y < button_y + button_height)
-                button.configure(fg_color='#323232' if inside else '#1F1F1F')
+                target_color = '#323232' if inside else '#1F1F1F'
+                if button.cget('fg_color') != target_color:
+                    button.configure(fg_color=target_color)
 
         except Exception:
             pass
@@ -339,6 +344,12 @@ class ScientificUI(CalculatorUI):
         return 'break'
 
 
+    def _handle_toplevel_configure(self, event):
+
+        if event.widget == self.winfo_toplevel() and self.fx_menu is not None and self.fx_menu.winfo_exists():
+            self._close_fx_menu()
+
+
     def _handle_toplevel_outside_click(self, event):
 
         if self.fx_menu is None or not self.fx_menu.winfo_exists():
@@ -354,4 +365,5 @@ class ScientificUI(CalculatorUI):
         menu_h = self.fx_menu.winfo_height()
 
         if not (menu_x <= x <= menu_x + menu_w and menu_y <= y <= menu_y + menu_h):
-            self._close_fx_menu()                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+            self._close_fx_menu()
+
