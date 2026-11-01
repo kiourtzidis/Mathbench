@@ -104,11 +104,12 @@ class DateUI(ctk.CTkFrame):
 
         day_entry = ctk.CTkEntry(
             fields_frame, 
-            width=30, 
+            width=33, 
             font=('Jetbrains Mono', 14),
             fg_color='#292929',
             border_width=1, 
             border_color='#4A4A4A',
+            placeholder_text='DD',
             justify='center'
         )
         day_entry.grid(row=0, column=1, padx=2)
@@ -123,12 +124,13 @@ class DateUI(ctk.CTkFrame):
 
         month_entry = ctk.CTkEntry(
             fields_frame,
-            width=30, 
+            width=39, 
             font=('Jetbrains Mono', 14),
             fg_color='#292929', 
             border_width=1, 
             border_color='#4A4A4A',
-            justify='center'
+            justify='center',
+            placeholder_text='MM'
         )
         month_entry.grid(row=0, column=3, padx=2)
 
@@ -147,6 +149,7 @@ class DateUI(ctk.CTkFrame):
             fg_color='#292929', 
             border_width=1, 
             border_color='#4A4A4A',
+            placeholder_text='YYYY',
             justify='center'
         )
         year_entry.grid(row=0, column=5, padx=2)
