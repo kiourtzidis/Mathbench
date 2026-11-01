@@ -63,13 +63,13 @@ class DateUI(ctk.CTkFrame):
         )
         self.from_date_label.grid(row=1, column=0, sticky='w', padx=(24, 6), pady=(14, 6))
 
-        self.track_label = ctk.CTkLabel(
+        self.ribbon_label = ctk.CTkLabel(
             self.summary_frame,
             text='●' + '━' * 22 + '●',
             font=('Jetbrains Mono', 13),
             text_color='#888888'
         )
-        self.track_label.grid(row=1, column=1, sticky='ew', padx=12, pady=(14, 6))
+        self.ribbon_label.grid(row=1, column=1, sticky='ew', padx=12, pady=(14, 6))
 
         self.to_date_label = ctk.CTkLabel(
             self.summary_frame,
@@ -299,12 +299,12 @@ class DateUI(ctk.CTkFrame):
         start_date, end_date = (from_date, to_date) if from_date <= to_date else (to_date, from_date)
 
         self.from_date_label.configure(
-            text=f'{start_date.strftime('%a')} {start_date.day} {start_date.strftime('%b %Y')}'
+            text=f'{start_date.strftime('%a')} {start_date.day} {start_date.strftime('%b')} {start_date.year}'
         )
         self.to_date_label.configure(
-            text=f'{end_date.strftime('%a')} {end_date.day} {end_date.strftime('%b %Y')}'
+            text=f'{end_date.strftime('%a')} {end_date.day} {end_date.strftime('%b')} {end_date.year}'
         )
-        self.track_label.configure(text='●' + '━' * 22 + '●')
+        self.ribbon_label.configure(text='●' + '━' * 22 + '●')
 
         result = self.logic.calculate_difference(from_date, to_date)
 
