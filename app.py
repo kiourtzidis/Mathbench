@@ -47,6 +47,10 @@ BINDINGS = {
         ('Ctrl+S', 'Swap currencies'),
         ('Ctrl+R', 'Refresh rates')
     ),
+    'Date': (
+        ('Ctrl+C', 'Copy compact result'),
+        ('Ctrl+Shift+C', 'Copy detailed result'),
+    ),
 }
 
 class App:

@@ -22,6 +22,18 @@ class DateUI(ctk.CTkFrame):
 
         self._calculate()
 
+        date_bindings = (
+            ('<Control-c>', self._copy_compact),
+            ('<Control-Shift-C>', self._copy_detailed),
+        )
+
+        for sequence, action in date_bindings:
+            self.winfo_toplevel().bind(
+                sequence,
+                lambda event, callback=action: self._handle_shortcut(event, callback),
+                add='+'
+            )
+
 
     def _build_panel(self):
 
@@ -326,3 +338,48 @@ class DateUI(ctk.CTkFrame):
         self._calculate()
         self._sync_calendar(self.from_entries, self.from_calendar)
         self._sync_calendar(self.to_entries, self.to_calendar)
+
+
+    def _copy_compact(self):
+
+        result = self.result_label.cget('text')
+
+        if not result or result == 'Invalid date':
+            return
+
+        from_date = self.from_date_label.cget('text')
+        to_date = self.to_date_label.cget('text')
+
+        text = f'{from_date} → {to_date}: {result}'
+
+        self.clipboard_clear()
+        self.clipboard_append(text)
+
+
+    def _copy_detailed(self):
+
+        result = self.result_label.cget('text')
+
+        if not result or result == 'Invalid date':
+            return
+
+        from_date = self.from_date_label.cget('text')
+        to_date = self.to_date_label.cget('text')
+        breakdown = self.breakdown_label.cget('text')
+
+        text = f'{from_date} → {to_date}: {result}'
+
+        if breakdown:
+            text = f'{text}  ({breakdown})'
+
+        self.clipboard_clear()
+        self.clipboard_append(text)
+
+
+    def _handle_shortcut(self, event, action):
+
+        if not self.winfo_ismapped():
+            return
+
+        action()
+        return 'break'
